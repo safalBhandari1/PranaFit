@@ -5,6 +5,8 @@ import { useThemeStore } from '../../shared/stores/useThemeStore';
 import { ThemeText } from '../../shared/ui/ThemeText';
 import { ThemeView } from '../../shared/ui/ThemeView';
 import { ThemeButton } from '../../shared/ui/ThemeButton';
+import WorkoutHomeScreen from '../../features/workout/components/WorkoutHomeScreen';
+
 
 // Themed placeholder screens (same as before)
 const HomeScreen = () => {
@@ -70,26 +72,30 @@ const ProjectsScreen = () => {
   );
 };
 
-const WorkoutScreen = () => {
-  const { theme, toggleTheme, mode } = useThemeStore();
+// const WorkoutScreen = () => {
+//   const { theme, toggleTheme, mode } = useThemeStore();
   
-  return (
-    <ThemeView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <ThemeText variant="h1">💪 Workout Tab</ThemeText>
-      <ThemeText variant="body" color="secondary">Activity Session Management</ThemeText>
-      <ThemeText variant="caption" style={{ marginTop: 16 }}>
-        Current theme: {mode}
-      </ThemeText>
+//   return (
+//     <ThemeView style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+//       <ThemeText variant="h1">💪 Workout Tab</ThemeText>
+//       <ThemeText variant="body" color="secondary">Activity Session Management</ThemeText>
+//       <ThemeText variant="caption" style={{ marginTop: 16 }}>
+//         Current theme: {mode}
+//       </ThemeText>
       
-      <ThemeButton 
-        onPress={toggleTheme}
-        style={{ marginTop: 20 }}
-      >
-        <ThemeText>Switch to {mode === 'light' ? 'Dark' : 'Light'} Mode</ThemeText>
-      </ThemeButton>
-    </ThemeView>
-  );
-};
+//       <ThemeButton 
+//         onPress={toggleTheme}
+//         style={{ marginTop: 20 }}
+//       >
+//         <ThemeText>Switch to {mode === 'light' ? 'Dark' : 'Light'} Mode</ThemeText>
+//       </ThemeButton>
+//     </ThemeView>
+//   );
+// };
+
+const WorkoutScreen = () => {
+    return <WorkoutHomeScreen />;
+  };
 
 const ProfileScreen = () => {
   const { theme, toggleTheme, mode } = useThemeStore();
