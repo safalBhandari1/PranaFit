@@ -96,25 +96,6 @@ const GymSplitSelectionStep: React.FC = () => {
     });
   };
 
-  // Handle start workout - updated for our store system
-//   const handleStartWorkout = () => {
-//     let muscleGroupsToPass: string[] = [];
-
-//     // Determine what's selected and build muscleGroups array
-//     if (selectedMuscleGroups.length > 0) {
-//       muscleGroupsToPass = selectedMuscleGroups;
-//     } else if (selectedPPL.length > 0) {
-//       muscleGroupsToPass = selectedPPL;
-//     } else if (selectedUpperLower.length > 0) {
-//       muscleGroupsToPass = selectedUpperLower;
-//     }
-
-//     // Map to our gym split system
-//     const gymSplit = mapMuscleGroupsToSplit(muscleGroupsToPass);
-    
-//     // Set in store and proceed to exercise selection
-//     setSelectedGymSplit(gymSplit);
-//   };
 
   const handleStartWorkout = () => {
     let muscleGroupsToPass: string[] = [];

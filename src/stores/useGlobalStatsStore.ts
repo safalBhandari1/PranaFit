@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import {WorkoutSession} from '../features/workout/types/workout'
+import {WorkoutSession} from '../features/workout/types/workout';
 //import { WorkoutSession } from '../features/workout/types/workout';
 import { GlobalStats } from '../shared/types/common';
 

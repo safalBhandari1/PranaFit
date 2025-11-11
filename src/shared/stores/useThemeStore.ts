@@ -1,8 +1,7 @@
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { persist } from 'zustand/middleware';
 import { Appearance } from 'react-native';
-import { lightColors, darkColors } from '../theme/colors';
+import { lightColors, darkColors, ThemeMode } from '../theme/colors';
 import { spacing, borderRadius, typography, shadows } from '../theme/designTokens';
 
 export interface Theme {
@@ -11,18 +10,23 @@ export interface Theme {
   borderRadius: typeof borderRadius;
   typography: typeof typography;
   shadows: typeof shadows;
-  mode: 'light' | 'dark';
+  mode: ThemeMode;
 }
 
 interface ThemeStore {
   theme: Theme;
-  mode: 'light' | 'dark';
+  mode: ThemeMode;
+  systemPreferred: boolean;
+  setMode: (mode: ThemeMode) => void;
+  setSystemPreferred: (preferred: boolean) => void;
   toggleTheme: () => void;
-  setMode: (mode: 'light' | 'dark') => void;
 }
 
+// Get system color scheme
+const systemColorScheme = Appearance.getColorScheme();
+
 // Helper to get theme based on mode
-const getTheme = (mode: 'light' | 'dark'): Theme => ({
+const getTheme = (mode: ThemeMode): Theme => ({
   colors: mode === 'dark' ? darkColors : lightColors,
   spacing,
   borderRadius,
@@ -36,26 +40,48 @@ export const useThemeStore = create<ThemeStore>()(
     (set, get) => ({
       theme: getTheme('light'),
       mode: 'light',
+      systemPreferred: true,
       
-      toggleTheme: () => {
-        const { mode } = get();
-        const newMode = mode === 'light' ? 'dark' : 'light';
+      setMode: (mode: ThemeMode) => {
+        const { systemPreferred } = get();
+        const effectiveMode = systemPreferred ? (Appearance.getColorScheme() || mode) : mode;
+        
         set({
-          mode: newMode,
-          theme: getTheme(newMode),
+          mode,
+          theme: getTheme(effectiveMode),
         });
       },
       
-      setMode: (mode: 'light' | 'dark') => {
+      setSystemPreferred: (systemPreferred: boolean) => {
+        const { mode } = get();
+        const effectiveMode = systemPreferred ? (Appearance.getColorScheme() || mode) : mode;
+        
         set({
-          mode,
-          theme: getTheme(mode),
+          systemPreferred,
+          theme: getTheme(effectiveMode),
+        });
+      },
+      
+      toggleTheme: () => {
+        const { mode, systemPreferred } = get();
+        const newMode = mode === 'light' ? 'dark' : 'light';
+        const effectiveMode = systemPreferred ? (Appearance.getColorScheme() || newMode) : newMode;
+        
+        set({
+          mode: newMode,
+          theme: getTheme(effectiveMode),
         });
       },
     }),
     {
       name: 'pranafit-theme-store',
-      storage: createJSONStorage(() => AsyncStorage),
+      partialize: (state) => ({
+        mode: state.mode,
+        systemPreferred: state.systemPreferred,
+      }),
     }
   )
 );
+
+// Initialize theme store with system preferences
+useThemeStore.getState().setMode(systemColorScheme === 'dark' ? 'dark' : 'light');

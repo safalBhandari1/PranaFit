@@ -65,6 +65,13 @@ export enum WorkoutType {
     // Gym-specific context
     gymSplitType?: GymSplitType;
     customMuscleGroups?: string[];
+
+    // ✅ ADD CARDIO PROPERTIES TO BASE INTERFACE
+    distance?: number;
+    elevation?: number;
+    pace?: number;
+    caloriesBurned?: number;
+    intensity?: number;
   }
   
   // Modal step management for the single modal approach
@@ -74,3 +81,75 @@ export enum WorkoutType {
     | 'exercise-selection'
     | 'active-session'
     | 'completion';
+
+
+    //for gym active session step
+    export interface WorkoutSet {
+        setId: string;
+        exerciseId: string;
+        setNumber: number;
+        reps: number;
+        weight: number;
+        completed: boolean;
+        restTime?: number;
+      }
+      
+      export interface PersonalRecords {
+        maxReps: number;
+        maxRepsWeight: number;
+        maxWeight: number;
+        maxWeightReps: number;
+      }
+      
+      export interface WorkoutExercise {
+        id: string;
+        exerciseId: string;
+        name: string;
+        muscleGroup: string;
+        equipment: string;
+        sets: WorkoutSet[];
+        personalRecords: PersonalRecords;
+        volume: number;
+        notes: string;
+      }
+
+// Add these interfaces at the bottom of the file:
+// Cardio-specific tracking
+export interface CardioSession extends WorkoutSession {
+  distance?: number;
+  elevation?: number;
+  pace?: number;
+  caloriesBurned?: number;
+  intensity?: number; // 1-10 scale
+}
+
+// Structured-specific tracking (Yoga/Calisthenics)
+// Structured exercise set (different from gym sets)
+export interface StructuredExerciseSet {
+  setId: string;
+  setNumber: number;
+  reps?: number;
+  time: number; // seconds
+  isActive: boolean;
+}
+
+// Structured exercise with tracking properties
+export interface StructuredExercise {
+  id: string;
+  exerciseId: string;
+  name: string;
+  muscleGroup?: string;
+  equipment?: string;
+  sets?: StructuredExerciseSet[];
+  duration?: number; // for timed exercises
+  reps?: number; // for rep-based exercises
+  isPRTimerActive?: boolean;
+}
+
+// Structured session type
+export interface StructuredSession extends WorkoutSession {
+  exercises: Exercise[];
+  trackingMode: 'sets' | 'pr';
+}
+
+
