@@ -6,6 +6,7 @@ import { WorkoutType } from '../types/workout';
 import { ThemeText } from '../../../shared/ui/ThemeText'; // Using shared UI
 import { ThemeView } from '../../../shared/ui/ThemeView';
 import { createStyles } from '../../../shared/styles/createStyles'; // Using shared styles
+import { useEnhancedTheme } from '../../../shared/hooks/useEnhancedTheme'; // ADD THIS
 
 // Using your exact workout data structure with our WorkoutType enum
 const WORKOUTS = [
@@ -68,7 +69,8 @@ const WORKOUTS = [
 ];
 
 const WorkoutHomeScreen: React.FC = () => {
-    const { theme } = useThemeStore();
+    //const { theme } = useThemeStore();
+    const { theme } = useEnhancedTheme(); // CHANGE THIS
     const { openWorkoutModal } = useWorkoutStore();
     const styles = createStyles(theme); // FIXED: Direct call, no .workout
   

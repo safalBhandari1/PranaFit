@@ -1,7 +1,9 @@
+
 import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth'; // Use getAuth instead of initializeAuth
+import { initializeAuth, getReactNativePersistence, GoogleAuthProvider } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
+import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
 
 const firebaseConfig = {
   apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
@@ -15,11 +17,13 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-// Use simple getAuth - it handles persistence automatically in React Native
-const auth = getAuth(app);
+// Initialize Firebase Auth with persistence
+const auth = initializeAuth(app, {
+  persistence: getReactNativePersistence(ReactNativeAsyncStorage)
+});
 
 // Initialize Firebase services
-export { auth };
+export { auth, GoogleAuthProvider };
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 export default app;

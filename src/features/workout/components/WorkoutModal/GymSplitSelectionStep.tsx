@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { View, TouchableOpacity, ScrollView, StyleSheet } from 'react-native';
-import { useThemeStore } from '../../../../shared/stores/useThemeStore'; // FIXED PATH
+import { View, TouchableOpacity } from 'react-native';
+import { useThemeStore } from '../../../../shared/stores/useThemeStore';
 import { useWorkoutStore } from '../../stores/useWorkoutStore';
 import { ThemeText } from '../../../../shared/ui/ThemeText';
-import {ThemeView} from '../../../../shared/ui/ThemeView'
+import { ThemeView } from '../../../../shared/ui/ThemeView';
 import { mapMuscleGroupsToSplit } from '../../../../shared/data/exercises';
 import { createStyles } from '../../../../shared/styles/createStyles';
+import { createGymSpliteSelectionStyle } from './styles/gymSplitSelectionStyles';
 
 
 // Muscle groups data - matching your original structure
@@ -36,13 +37,18 @@ const upperLowerWorkouts = [
 
 const GymSplitSelectionStep: React.FC = () => {
   const { theme } = useThemeStore();
-  const { setSelectedGymSplit } = useWorkoutStore();
-  const styles = createStyles(theme);
+  const { setSelectedGymSplit, closeWorkoutModal } = useWorkoutStore();
+  const styles = createGymSpliteSelectionStyle(theme);
   
   // State matching your original logic
   const [selectedMuscleGroups, setSelectedMuscleGroups] = useState<string[]>([]);
   const [selectedPPL, setSelectedPPL] = useState<string[]>([]);
   const [selectedUpperLower, setSelectedUpperLower] = useState<string[]>([]);
+
+  // ✅ ADDED: Back button handler
+  const handleBack = () => {
+    closeWorkoutModal();
+  };
 
   // Handle muscle group multi-selection - same as your original
   const handleMuscleGroupSelect = (muscleGroup: string) => {
@@ -95,7 +101,6 @@ const GymSplitSelectionStep: React.FC = () => {
       return newSelection;
     });
   };
-
 
   const handleStartWorkout = () => {
     let muscleGroupsToPass: string[] = [];
@@ -202,46 +207,63 @@ const GymSplitSelectionStep: React.FC = () => {
 
   return (
     <ThemeView style={styles.container}>
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Main Title */}
-        <View style={styles.titleSection}>
-          <ThemeText variant="h1" style={{ textAlign: 'center', marginBottom: 10 }}>
-            Select a workout
+      {/* ✅ Header with back button */}
+      <View style={[styles.header, { backgroundColor: theme.colors.card }]}>
+        <TouchableOpacity onPress={handleBack} style={styles.backButton}>
+          <ThemeText style={[styles.backButtonText, { color: theme.colors.primary }]}>
+            ← Back
           </ThemeText>
-          <ThemeText variant="body" style={{ textAlign: 'center', color: theme.colors.text.secondary }}>
-            {hasSelection ? `${getSelectionText()} selected` : 'Choose muscle groups or workout type'}
-          </ThemeText>
-        </View>
+        </TouchableOpacity>
+        {/* ✅ CHANGED: Header title one size down */}
+        <ThemeText variant="h3" style={styles.headerTitle}>
+          Select Workout Split
+        </ThemeText>
+        <View style={styles.headerSpacer} />
+      </View>
 
-        {/* SPLITS SECTION - Multi Selection */}
-        <View style={styles.section}>
-          <ThemeText variant="h3" style={{ marginBottom: 12 }}>
+      <View style={styles.exerciseSelectionStepcontent}>
+        {/* ✅ REMOVED: ScrollView and title section */}
+        
+        {/* ✅ SPLITS SECTION - Reduced spacing */}
+        <View style={[styles.section, { marginBottom: 12 }]}> {/* Reduced from default spacing */}
+          <ThemeText variant="h3" style={{ marginBottom: 8, textAlign: 'left' }}> {/* Left aligned */}
             Muscle Groups {selectedMuscleGroups.length > 0 && `(${selectedMuscleGroups.length} selected)`}
           </ThemeText>
           {renderCompactGrid(splits, (item) => handleMuscleGroupSelect(item.name), selectedMuscleGroups)}
         </View>
 
-        {/* PPL SECTION - Single Selection */}
-        <View style={styles.section}>
-          <ThemeText variant="h3" style={{ marginBottom: 12 }}>
+        {/* ✅ PPL SECTION - Reduced spacing */}
+        <View style={[styles.section, { marginBottom: 12 }]}> {/* Reduced from default spacing */}
+          <ThemeText variant="h3" style={{ marginBottom: 8, textAlign: 'left' }}> {/* Left aligned */}
             PPL {selectedPPL.length > 0 && '(1 selected)'}
           </ThemeText>
           {renderCompactGrid(pplWorkouts, (item) => handleSingleSelect(item.name, 'ppl', setSelectedPPL), selectedPPL)}
         </View>
 
-        {/* UPPER/LOWER SECTION - Single Selection */}
-        <View style={styles.section}>
-          <ThemeText variant="h3" style={{ marginBottom: 12 }}>
+        {/* ✅ UPPER/LOWER SECTION - Reduced spacing */}
+        <View style={[styles.section, { marginBottom: 12 }]}> {/* Reduced from default spacing */}
+          <ThemeText variant="h3" style={{ marginBottom: 8, textAlign: 'left' }}> {/* Left aligned */}
             Upper/Lower Split {selectedUpperLower.length > 0 && '(1 selected)'}
           </ThemeText>
           {renderCompactGrid(upperLowerWorkouts, (item) => handleSingleSelect(item.name, 'upperlower', setSelectedUpperLower), selectedUpperLower)}
         </View>
+      </View>
 
-        {/* Start Workout Button */}
-        <View style={styles.footer}>
+      {/* ✅ FIXED: Footer with fixed positioning */}
+      <View style={[styles.fixedFooter, { backgroundColor: theme.colors.background }]}>
+        <View style={styles.selectionActions}>
+          <TouchableOpacity 
+            style={[styles.cancelButton, { backgroundColor: theme.colors.border }]}
+            onPress={handleBack}
+          >
+            <ThemeText style={[styles.cancelButtonText, { color: theme.colors.text.secondary }]}>
+              Cancel
+            </ThemeText>
+          </TouchableOpacity>
+          
           <TouchableOpacity
             style={[
-              styles.startButton,
+              styles.startSessionButton, 
               { 
                 backgroundColor: hasSelection ? theme.colors.primary : theme.colors.border,
                 opacity: hasSelection ? 1 : 0.6
@@ -251,18 +273,17 @@ const GymSplitSelectionStep: React.FC = () => {
             disabled={!hasSelection}
           >
             <ThemeText style={[
-              styles.startButtonText,
+              styles.startSessionButtonText,
               { color: hasSelection ? '#FFF' : theme.colors.text.secondary }
             ]}>
-              {hasSelection ? `Start ${getSelectionText()} Workout` : 'Select Workout Type'}
+              {/* {hasSelection ? `Start ${getSelectionText()} Workout` : 'Select Workout Type'} */}
+              {hasSelection ? `Start Workout` : 'Select Workout Type'}
             </ThemeText>
           </TouchableOpacity>
         </View>
-      </ScrollView>
+      </View>
     </ThemeView>
   );
 };
 
-
 export default GymSplitSelectionStep;
-

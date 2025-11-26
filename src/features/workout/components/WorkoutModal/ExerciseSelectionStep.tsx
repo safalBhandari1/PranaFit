@@ -408,7 +408,7 @@ const ExerciseSelectionStep: React.FC = () => {
                 styles.startSessionButtonText,
                 { color: selectedExercises.length > 0 ? '#FFF' : theme.colors.text.secondary }
               ]}>
-                Start Workout ({selectedExercises.length})
+                Start Session ({selectedExercises.length})
               </ThemeText>
             </TouchableOpacity>
           </View>

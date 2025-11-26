@@ -1,8 +1,11 @@
 import { useCallback } from 'react';
 import { useThemeStore, Theme } from '../stores/useThemeStore';
-import { spacing, borderRadius, typography, shadows, Spacing, BorderRadius, Typography, Shadows } from '../theme/designTokens';
+import { Spacing, BorderRadius } from '../theme/designTokens';
 
-export interface UseEnhancedThemeReturn extends Theme {
+export interface UseEnhancedThemeReturn {
+  // The main theme object (for compatibility with existing code)
+  theme: Theme;
+  
   // Convenience methods
   isDark: boolean;
   isLight: boolean;
@@ -19,6 +22,10 @@ export interface UseEnhancedThemeReturn extends Theme {
   toggleTheme: () => void;
   setMode: (mode: 'light' | 'dark') => void;
   setSystemPreferred: (preferred: boolean) => void;
+  
+  // Store state
+  storeMode: 'light' | 'dark';
+  systemPreferred: boolean;
 }
 
 export const useEnhancedTheme = (): UseEnhancedThemeReturn => {
@@ -28,22 +35,22 @@ export const useEnhancedTheme = (): UseEnhancedThemeReturn => {
   const isLight = mode === 'light';
 
   const gap = useCallback((size: Spacing): number => {
-    return spacing[size];
-  }, []);
+    return theme.spacing[size];
+  }, [theme.spacing]);
 
   const padding = useCallback((vertical: Spacing, horizontal?: Spacing) => {
     return {
-      paddingVertical: spacing[vertical],
-      paddingHorizontal: spacing[horizontal || vertical],
+      paddingVertical: theme.spacing[vertical],
+      paddingHorizontal: theme.spacing[horizontal || vertical],
     };
-  }, []);
+  }, [theme.spacing]);
 
   const margin = useCallback((vertical: Spacing, horizontal?: Spacing) => {
     return {
-      marginVertical: spacing[vertical],
-      marginHorizontal: spacing[horizontal || vertical],
+      marginVertical: theme.spacing[vertical],
+      marginHorizontal: theme.spacing[horizontal || vertical],
     };
-  }, []);
+  }, [theme.spacing]);
 
   const getColor = useCallback((colorPath: string): string => {
     const path = colorPath.split('.');
@@ -52,7 +59,7 @@ export const useEnhancedTheme = (): UseEnhancedThemeReturn => {
     for (const key of path) {
       if (current[key] === undefined) {
         console.warn(`Color path "${colorPath}" not found in theme`);
-        return theme.colors.primary; // Fallback color
+        return theme.colors.primary;
       }
       current = current[key];
     }
@@ -61,7 +68,7 @@ export const useEnhancedTheme = (): UseEnhancedThemeReturn => {
   }, [theme.colors]);
 
   return {
-    ...theme,
+    theme, // Main theme object for compatibility
     isDark,
     isLight,
     gap,
@@ -71,9 +78,7 @@ export const useEnhancedTheme = (): UseEnhancedThemeReturn => {
     toggleTheme,
     setMode,
     setSystemPreferred,
-    mode,
+    storeMode: mode,
+    systemPreferred,
   };
 };
-
-// Export a simpler useTheme hook for basic usage
-export const useTheme = useEnhancedTheme;

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   View, 
@@ -20,6 +21,7 @@ const StructuredActiveSessionStep: React.FC = () => {
     completeWorkoutSession, 
     setCurrentStep,
     workoutType,
+    projectContext,
     selectedExercises
   } = useWorkoutStore();
   
@@ -156,10 +158,25 @@ const StructuredActiveSessionStep: React.FC = () => {
     }
   };
 
-  const handleBack = () => {
-    // Go back to exercise selection for structured workouts
-    setCurrentStep('exercise-selection');
-  };
+//   const handleBack = () => {
+//     // Go back to exercise selection for structured workouts
+//     setCurrentStep('exercise-selection');
+//   }; 
+    const handleBack = () => {
+    if (projectContext) {
+        // If came from project, go back to exercise selection or close
+        if (selectedExercises.length === 0) {
+          setCurrentStep('exercise-selection');
+        } else {
+          // Use getState to access closeWorkoutModal
+          const { closeWorkoutModal } = useWorkoutStore.getState();
+          closeWorkoutModal();
+        }
+      } else {
+        // Go back to exercise selection for structured workouts
+        setCurrentStep('exercise-selection');
+      }
+    };
 
   const handleReset = () => {
     Alert.alert(
@@ -356,23 +373,26 @@ const StructuredActiveSessionStep: React.FC = () => {
   };
 
   const getWorkoutTitle = () => {
+    if (!workoutType) {
+        return 'Workout';
+    }
     return workoutType.charAt(0).toUpperCase() + workoutType.slice(1);
   };
 
   return (
     <ThemeView style={styles.container}>
-      {/* Header */}
+      {/* Header - Updated with only arrow */}
       <View style={[styles.header, { backgroundColor: theme.colors.card }]}>
         <TouchableOpacity 
           onPress={handleBack} 
           style={styles.backButton}
         >
           <ThemeText style={[styles.backButtonText, { color: theme.colors.primary }]}>
-            ← Back
+            ←
           </ThemeText>
         </TouchableOpacity>
         <ThemeText variant="h2" style={styles.headerTitle}>
-          {getWorkoutTitle()}
+          Session Tracker
         </ThemeText>
         <View style={styles.headerSpacer} />
       </View>
@@ -428,8 +448,8 @@ const StructuredActiveSessionStep: React.FC = () => {
       {/* Timer Section */}
       <View style={styles.timerSection}>
         <View style={styles.workoutInfo}>
-          <ThemeText variant="h3" style={{ color: theme.colors.text.primary }}>
-            Current: {getWorkoutTitle()}
+          <ThemeText style={[styles.workoutTitle, { color: theme.colors.text.primary }]}>
+            {getWorkoutTitle()}
           </ThemeText>
           <TouchableOpacity 
             style={[styles.startButton, { backgroundColor: theme.colors.primary }]}
@@ -441,10 +461,10 @@ const StructuredActiveSessionStep: React.FC = () => {
           </TouchableOpacity>
         </View>
         <View style={styles.timerContainer}>
-          <ThemeText variant="body" style={{ color: theme.colors.text.secondary }}>
+          <ThemeText style={[styles.timerLabel, { color: theme.colors.text.secondary }]}>
             Session Time
           </ThemeText>
-          <ThemeText variant="h2" style={{ color: theme.colors.primary }}>
+          <ThemeText style={[styles.timer, { color: theme.colors.primary }]}>
             {formatTime(time)}
           </ThemeText>
         </View>
@@ -457,17 +477,17 @@ const StructuredActiveSessionStep: React.FC = () => {
             const isExpanded = isExerciseExpanded(exercise.id, exerciseIndex);
 
             return (
-              <View key={exercise.id} style={styles.exerciseCard}>
+              <View key={exercise.id} style={[styles.exerciseCard, { backgroundColor: theme.colors.card }]}>
                 {/* Exercise Header */}
                 <TouchableOpacity 
                   style={styles.exerciseHeader}
                   onPress={() => toggleExercise(exercise.id)}
                 >
                   <View style={styles.exerciseInfo}>
-                    <ThemeText variant="h3" style={{ color: theme.colors.text.primary }}>
+                    <ThemeText style={[styles.exerciseName, { color: theme.colors.text.primary }]}>
                       {exercise.name}
                     </ThemeText>
-                    <ThemeText variant="body" style={{ color: theme.colors.text.secondary }}>
+                    <ThemeText style={[styles.exerciseMuscleGroup, { color: theme.colors.text.secondary }]}>
                       {trackingMode === 'sets' 
                         ? `${exercise.sets?.length || 0} sets` 
                         : 'PR Tracking'
@@ -488,7 +508,7 @@ const StructuredActiveSessionStep: React.FC = () => {
                       /* SET TRACKING MODE */
                       <View style={styles.trackingSection}>
                         <View style={styles.setsHeader}>
-                          <ThemeText variant="body" style={{ color: theme.colors.text.secondary }}>
+                          <ThemeText style={[styles.trackingLabel, { color: theme.colors.text.secondary }]}>
                             Sets
                           </ThemeText>
                           <View style={styles.setControls}>
@@ -498,7 +518,7 @@ const StructuredActiveSessionStep: React.FC = () => {
                             >
                               <ThemeText style={[styles.setControlText, { color: theme.colors.text.primary }]}>-</ThemeText>
                             </TouchableOpacity>
-                            <ThemeText variant="body" style={{ color: theme.colors.text.primary }}>
+                            <ThemeText style={[styles.setCount, { color: theme.colors.text.primary }]}>
                               {exercise.sets?.length || 0}
                             </ThemeText>
                             <TouchableOpacity 
@@ -522,7 +542,7 @@ const StructuredActiveSessionStep: React.FC = () => {
                         {exercise.sets?.map((set, setIndex) => (
                           <View key={set.setId} style={styles.setRow}>
                             <View style={styles.setRowContent}>
-                              <ThemeText variant="body" style={{ color: theme.colors.text.primary }}>
+                              <ThemeText style={[styles.setNumber, { color: theme.colors.text.primary }]}>
                                 Set {set.setNumber}
                               </ThemeText>
                               
@@ -575,7 +595,7 @@ const StructuredActiveSessionStep: React.FC = () => {
                       /* PR TRACKING MODE */
                       <View style={styles.trackingSection}>
                         <View style={styles.prSection}>
-                          <ThemeText variant="h3" style={{ color: theme.colors.text.primary }}>
+                          <ThemeText style={[styles.prTitle, { color: theme.colors.text.primary }]}>
                             Personal Record
                           </ThemeText>
                           
@@ -590,7 +610,7 @@ const StructuredActiveSessionStep: React.FC = () => {
                           {/* PR Tracking Row */}
                           <View style={styles.setRow}>
                             <View style={styles.setRowContent}>
-                              <ThemeText variant="body" style={{ color: theme.colors.text.primary }}>
+                              <ThemeText style={[styles.setNumber, { color: theme.colors.text.primary }]}>
                                 PR
                               </ThemeText>
                               
@@ -646,16 +666,16 @@ const StructuredActiveSessionStep: React.FC = () => {
             );
           })
         ) : (
-          <View style={styles.emptyState}>
-            <ThemeText variant="body" style={{ color: theme.colors.text.secondary }}>
+          <View style={[styles.emptyState, { backgroundColor: theme.colors.card }]}>
+            <ThemeText style={[styles.emptyStateText, { color: theme.colors.text.secondary }]}>
               No exercises selected.
             </ThemeText>
           </View>
         )}
 
         {/* Notes Section */}
-        <View style={styles.inputSection}>
-          <ThemeText variant="h3" style={{ color: theme.colors.text.primary }}>
+        <View style={[styles.inputSection, { backgroundColor: theme.colors.card }]}>
+          <ThemeText style={[styles.sectionTitle, { color: theme.colors.text.primary }]}>
             Session Notes
           </ThemeText>
           
@@ -680,7 +700,7 @@ const StructuredActiveSessionStep: React.FC = () => {
       </ScrollView>
 
       {/* Fixed Workout Actions */}
-      <View style={styles.workoutActions}>
+      <View style={[styles.workoutActions, { backgroundColor: theme.colors.background }]}>
         <View style={styles.completeActions}>
           <TouchableOpacity 
             style={[styles.cancelButton, { backgroundColor: theme.colors.border }]}

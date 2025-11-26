@@ -136,6 +136,7 @@ export const createStyles = (theme: any) => StyleSheet.create({
   // NEW: ExerciseSelectionStep specific styles
   exerciseSelectionStepcontainer: {
     flex: 1,
+    paddingHorizontal: 16,
   },
   header: {
     flexDirection: 'row',
@@ -178,8 +179,9 @@ export const createStyles = (theme: any) => StyleSheet.create({
   },
   categoryScroll: {
     maxHeight: 60,
-    paddingHorizontal: 16,
+    paddingHorizontal: 8,
     marginBottom: 8,
+    marginTop: -16, 
   },
   categoryContainer: {
     paddingVertical: 12,
@@ -197,7 +199,7 @@ export const createStyles = (theme: any) => StyleSheet.create({
     fontWeight: '600',
   },
   searchHeader: {
-    padding: 20,
+    padding: 8,
     paddingBottom: 10,
   },
   searchContainer: {
@@ -227,7 +229,7 @@ export const createStyles = (theme: any) => StyleSheet.create({
   },
   scrollContent: {
     flex: 1,
-    paddingHorizontal: 20,
+    paddingHorizontal: 8,
   },
   customExerciseSection: {
     marginBottom: 15,
@@ -329,7 +331,7 @@ export const createStyles = (theme: any) => StyleSheet.create({
     fontSize: 14,
   },
   fixedFooter: {
-    padding: 20,
+    padding: 8,
     paddingTop: 12,
     borderTopWidth: 1,
     borderTopColor: theme.colors.border,
