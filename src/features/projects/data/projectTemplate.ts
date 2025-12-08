@@ -527,3 +527,4 @@ export {
   generateYogaDays,
   generateMixedDays
 };
+

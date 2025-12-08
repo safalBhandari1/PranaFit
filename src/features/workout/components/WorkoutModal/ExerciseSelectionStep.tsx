@@ -20,6 +20,8 @@ const ExerciseSelectionStep: React.FC = () => {
   const selectedGymSplit = store.selectedGymSplit;
   const setCurrentStep = store.setCurrentStep;
   const closeWorkoutModal = store.closeWorkoutModal;
+  const projectContext = store.projectContext; // ✅ ADDED: Get project context
+
   
   const styles = createStyles(theme);
   
@@ -155,14 +157,17 @@ const ExerciseSelectionStep: React.FC = () => {
     });
   };
 
-  // Simple back button
-  const handleBack = () => {
-    if (workoutType === WorkoutType.GYM && selectedGymSplit) {
-      setCurrentStep('gym-split-selection');
-    } else {
-      closeWorkoutModal();
-    }
-  };
+    // Simple back button - ENHANCED
+    const handleBack = () => {
+      if (projectContext) {
+        // If came from project, close modal and return to project
+        closeWorkoutModal();
+      } else if (workoutType === WorkoutType.GYM && selectedGymSplit) {
+        setCurrentStep('gym-split-selection');
+      } else {
+        closeWorkoutModal();
+      }
+    };
 
   const handleStartSession = () => {
     if (selectedExercises.length === 0) {
@@ -205,16 +210,27 @@ const ExerciseSelectionStep: React.FC = () => {
 
   return (
     <ThemeView style={styles.container}>
-      {/* Header */}
-      <View style={[styles.header, { backgroundColor: theme.colors.card }]}>
-        <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-          <ThemeText style={[styles.backButtonText, { color: theme.colors.primary }]}>
-            ← Back
+      {/* 🚀 Twitter-style Header */}
+      <View style={[styles.header, { backgroundColor: theme.colors.background }]}>
+        {/* Left: Back Arrow (Twitter style - only arrow, no text) */}
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={handleBack}
+          activeOpacity={0.7}
+        >
+          <ThemeText style={[styles.backArrow, { color: theme.colors.primary, fontSize: 24 }]}>
+            ←
           </ThemeText>
         </TouchableOpacity>
-        <ThemeText variant="h2" style={styles.headerTitle}>
-          Select Exercises
-        </ThemeText>
+        
+        {/* Center: Title */}
+        <View style={styles.headerTitleContainer}>
+          <ThemeText variant="h2" style={[styles.headerTitle, { color: theme.colors.text.primary }]}>
+            Select Exercises
+          </ThemeText>
+        </View>
+        
+        {/* Right: Empty spacer for balance */}
         <View style={styles.headerSpacer} />
       </View>
       

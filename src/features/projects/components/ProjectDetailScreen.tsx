@@ -1,5 +1,5 @@
 // // src/features/projects/components/ProjectDetailScreen.tsx
-// import React, { useState, useCallback } from 'react';
+// import React, { useState, useCallback, useEffect, useMemo } from 'react';
 // import { 
 //   View, 
 //   ScrollView, 
@@ -13,9 +13,10 @@
 // import { useWorkoutStore } from '../../workout/stores/useWorkoutStore';
 // import { ThemeText } from '../../../shared/ui/ThemeText';
 // import { ThemeView } from '../../../shared/ui/ThemeView';
-// import { TrainingProject, DailyWorkout, WorkoutActivity } from '../types/project';
+// import { TrainingProject, DailyWorkout } from '../types/project';
 // import { WorkoutType } from '../../workout/types/workout';
 // import { createStyles } from '../styles/ProjectDetailScreenStyles';
+// import { appEvents, EVENT_WORKOUT_COMPLETED } from '../../../shared/utils/events';
 
 // interface ProjectDetailRouteParams {
 //   projectId: string;
@@ -26,11 +27,13 @@
 //   const { theme } = useThemeStore();
 //   const { 
 //     projects, 
-//     updateProject,
 //     markDayComplete, 
 //     markDayIncomplete,
-//     calculateProjectProgress 
+//     calculateProjectProgress,
+//     loadUserProjects,
+//     lastUpdated // ✅ ADDED: For reactivity
 //   } = useProjectStore();
+  
 //   const { openWorkoutModal } = useWorkoutStore();
 //   const navigation = useNavigation();
 //   const route = useRoute();
@@ -38,14 +41,87 @@
 
 //   const { projectId, project: routeProject } = route.params as ProjectDetailRouteParams;
   
-//   const [currentProject, setCurrentProject] = useState<TrainingProject | null>(
-//     routeProject || projects.find(p => p.id === projectId) || null
-//   );
+//   // ✅ FIXED: Use direct store subscription for real-time updates
+//   const currentProject = useMemo(() => 
+//     projects.find(p => p.id === projectId) || routeProject || null,
+//   [projects, projectId, routeProject, lastUpdated]); // ✅ ADDED: lastUpdated dependency
+
 //   const [refreshing, setRefreshing] = useState(false);
 //   const [updatingDay, setUpdatingDay] = useState<number | null>(null);
 //   const [expandedDays, setExpandedDays] = useState<Set<number>>(new Set());
+//   const [recentlyCompletedDay, setRecentlyCompletedDay] = useState<number | null>(null); // ✅ ADDED: Visual feedback
 
-//   // Toggle day expansion
+//   // ✅ FIXED: Enhanced event listener for real-time updates
+//   useEffect(() => {
+//     console.log('🎯 Setting up workout completion listener for project:', projectId);
+    
+//     const handleWorkoutCompleted = (data: any) => {
+//       console.log('📢 Workout completion event received in component:', data);
+      
+//       if (data.projectContext?.projectId === projectId) {
+//         const dayIndex = data.projectContext.dayIndex;
+//         console.log('🎯 Workout completed for this project, day:', dayIndex);
+        
+//         // Show visual feedback
+//         setRecentlyCompletedDay(dayIndex);
+        
+//         // Remove highlight after 2 seconds
+//         setTimeout(() => {
+//           setRecentlyCompletedDay(null);
+//         }, 2000);
+        
+//         // The store update will automatically trigger re-render via lastUpdated
+//       }
+//     };
+
+//     // Listen for workout completion events
+//     appEvents.on(EVENT_WORKOUT_COMPLETED, handleWorkoutCompleted);
+    
+//     return () => {
+//       // Cleanup listener
+//       appEvents.off(EVENT_WORKOUT_COMPLETED, handleWorkoutCompleted);
+//     };
+//   }, [projectId]);
+
+//   // ✅ FIXED: Load fresh project data when screen focuses
+//   const loadProjectData = useCallback(() => {
+//     console.log('🔄 Loading fresh project data for:', projectId);
+    
+//     // With direct store subscription, this is now automatic
+//     // The component will re-render whenever the store updates
+//   }, [projectId]);
+
+//   // ✅ FIXED: Refresh when screen comes into focus
+//   useFocusEffect(
+//     useCallback(() => {
+//       console.log('🎯 ProjectDetailScreen focused');
+//       loadProjectData();
+//     }, [loadProjectData])
+//   );
+
+//   // ✅ FIXED: Proper refresh that reloads from Firebase
+//   const onRefresh = useCallback(async () => {
+//     setRefreshing(true);
+//     try {
+//       const { useAppStore } = require('../../../shared/stores/useAppStore');
+//       const user = useAppStore.getState().user;
+      
+//       if (user?.uid) {
+//         await loadUserProjects(user.uid);
+//         console.log('✅ Refreshed projects from Firebase');
+//       }
+//     } catch (error) {
+//       console.error('Error refreshing project:', error);
+//       Alert.alert('Error', 'Failed to refresh project data');
+//     } finally {
+//       setRefreshing(false);
+//     }
+//   }, [loadUserProjects]);
+
+//   const handleBack = () => {
+//     navigation.goBack();
+//   };
+
 //   const toggleDayExpansion = (dayIndex: number) => {
 //     const newExpanded = new Set(expandedDays);
 //     if (newExpanded.has(dayIndex)) {
@@ -56,37 +132,6 @@
 //     setExpandedDays(newExpanded);
 //   };
 
-//   // Load project data
-//   const loadProject = useCallback(() => {
-//     if (routeProject) {
-//       setCurrentProject(routeProject);
-//       return;
-//     }
-    
-//     const project = projects.find(p => p.id === projectId);
-//     if (project) {
-//       setCurrentProject(project);
-//     } else {
-//       Alert.alert('Error', 'Project not found');
-//       navigation.goBack();
-//     }
-//   }, [projectId, routeProject, projects, navigation]);
-
-//   // Refresh when screen comes into focus
-//   useFocusEffect(
-//     useCallback(() => {
-//       loadProject();
-//     }, [loadProject])
-//   );
-
-//   // Refresh control
-//   const onRefresh = useCallback(() => {
-//     setRefreshing(true);
-//     loadProject();
-//     setTimeout(() => setRefreshing(false), 1000);
-//   }, [loadProject]);
-
-//   // Activity helpers
 //   const getActivityEmoji = (activityType: string) => {
 //     const emojis: {[key: string]: string} = {
 //       gym: '🏋️',
@@ -125,7 +170,6 @@
 //     });
 //   };
 
-//   // Get workout title for a day
 //   const getWorkoutTitle = (day: DailyWorkout) => {
 //     if (day.activities.some(activity => activity.name === 'Rest Day')) {
 //       return 'Rest Day';
@@ -148,12 +192,10 @@
 //     } else if (activityType === 'calisthenics' || activityType === 'yoga') {
 //       return `${activityType.charAt(0).toUpperCase() + activityType.slice(1)} Session`;
 //     } else {
-//       // Cardio activities
 //       return `${activityType.charAt(0).toUpperCase() + activityType.slice(1)} Session`;
 //     }
 //   };
 
-//   // Get workout details for expanded view
 //   const getWorkoutDetails = (day: DailyWorkout) => {
 //     if (day.activities.some(activity => activity.name === 'Rest Day')) {
 //       return [];
@@ -173,53 +215,26 @@
 //     console.log('Project:', currentProject.title);
 //     console.log('Day Index:', dayIndex);
     
-//     // Enhanced debugging
-//     console.log('🔍 DEBUG: Day activities structure:', day.activities);
-//     day.activities.forEach((activity, index) => {
-//       console.log(`🔍 Activity ${index}:`, {
-//         name: activity.name,
-//         type: activity.type,
-//         exercises: activity.exercises,
-//         exerciseCount: activity.exercises?.length || 0,
-//         exerciseTypes: activity.exercises?.map(ex => ex.workoutType)
-//       });
-//     });
-
-//     // For gym workouts, use the first activity type
 //     const mainActivity = day.activities[0];
 //     const workoutType = mainActivity.type as WorkoutType;
     
-//     // Smart exercise filtering
 //     const exercises = day.activities.flatMap(activity => {
 //       if (!activity.exercises || activity.exercises.length === 0) {
 //         return [];
 //       }
       
-//       // Filter exercises to match the activity type
 //       const matchingExercises = activity.exercises.filter(exercise => 
 //         exercise.workoutType === activity.type
 //       );
       
-//       console.log(`🔍 Filtered exercises for ${activity.name}:`, {
-//         originalCount: activity.exercises.length,
-//         filteredCount: matchingExercises.length,
-//         matchingExercises
-//       });
-      
 //       return matchingExercises;
 //     });
 
-//     console.log('🚀 FINAL: Opening workout modal with:', {
+//     console.log('🚀 Opening workout modal with:', {
 //       type: workoutType,
-//       totalExerciseCount: exercises.length,
-//       exercises: exercises.map(ex => ({
-//         name: ex.name,
-//         type: ex.workoutType,
-//         id: ex.id
-//       }))
+//       totalExerciseCount: exercises.length
 //     });
 
-//     // Open workout modal
 //     openWorkoutModal(workoutType, {
 //       projectContext: {
 //         projectId: currentProject.id,
@@ -228,14 +243,13 @@
 //         dayName: day.name
 //       },
 //       preSelectedExercises: exercises,
-//       // Pass focus areas for gym workouts
 //       ...(workoutType === WorkoutType.GYM && day.focusAreas && {
 //         customMuscleGroups: day.focusAreas
 //       })
 //     });
 //   };
 
-//   // Toggle day completion
+//   // Manual day completion toggle
 //   const handleToggleDayCompletion = async (dayIndex: number, completed: boolean) => {
 //     if (!currentProject) return;
 
@@ -248,8 +262,7 @@
 //         await markDayIncomplete(currentProject.id, dayIndex);
 //       }
       
-//       // Refresh project data
-//       loadProject();
+//       console.log('✅ Day completion updated');
       
 //     } catch (error) {
 //       console.error('❌ Error updating day completion:', error);
@@ -259,16 +272,19 @@
 //     }
 //   };
 
-//   // Calculate progress
+//   // ✅ FIXED: Memoized calculations for performance
+//   const progress = useMemo(() => 
+//     currentProject ? calculateProjectProgress(currentProject) : null,
+//   [currentProject, calculateProjectProgress]);
+
 //   const calculateProgress = () => {
-//     if (!currentProject) return 0;
-//     const progress = calculateProjectProgress(currentProject);
+//     if (!progress) return 0;
 //     return Math.round(progress.completionPercentage);
 //   };
 
 //   const getDaysCompleted = () => {
-//     if (!currentProject) return 0;
-//     return currentProject.dailyWorkouts.filter(day => day.completed).length;
+//     if (!progress) return 0;
+//     return progress.completedDays;
 //   };
 
 //   const hasWorkouts = (day: DailyWorkout) => {
@@ -276,7 +292,13 @@
 //            day.activities.length > 0;
 //   };
 
-//   // Loading state
+//   // ✅ FIXED: Memoized sorted workouts
+//   const sortedWorkouts = useMemo(() => 
+//     currentProject ? [...currentProject.dailyWorkouts].sort((a, b) => 
+//       new Date(a.date).getTime() - new Date(b.date).getTime()
+//     ) : [],
+//   [currentProject]);
+
 //   if (!currentProject) {
 //     return (
 //       <ThemeView style={styles.container}>
@@ -288,12 +310,22 @@
 //   }
 
 //   const activityColor = getActivityColor(currentProject.type);
-//   const sortedWorkouts = [...currentProject.dailyWorkouts].sort((a, b) => 
-//     new Date(a.date).getTime() - new Date(b.date).getTime()
-//   );
 
 //   return (
 //     <ThemeView style={styles.container}>
+//       {/* Custom Header */}
+//       <View style={[styles.header, { backgroundColor: theme.colors.card }]}>
+//         <TouchableOpacity onPress={handleBack} style={styles.backButton}>
+//           <ThemeText style={[styles.backButtonText, { color: theme.colors.primary }]}>
+//             ← Back
+//           </ThemeText>
+//         </TouchableOpacity>
+//         <ThemeText variant="h2" style={styles.headerTitle}>
+//           Project Details
+//         </ThemeText>
+//         <View style={styles.headerSpacer} />
+//       </View>
+      
 //       <ScrollView 
 //         style={styles.content} 
 //         showsVerticalScrollIndicator={false}
@@ -307,16 +339,6 @@
 //         }
 //       >
         
-//         {/* Header with Back Arrow */}
-//         <View style={styles.header}>
-//           <TouchableOpacity 
-//             style={styles.backButton}
-//             onPress={() => navigation.goBack()}
-//           >
-//             <ThemeText variant="h2" style={styles.backArrow}>←</ThemeText>
-//           </TouchableOpacity>
-//         </View>
-
 //         {/* Project Header */}
 //         <View style={styles.projectHeader}>
 //           <ThemeText variant="h1" style={styles.projectTitle}>
@@ -336,7 +358,7 @@
 //           )}
 //         </View>
 
-//         {/* Progress Overview */}
+//         {/* Progress Overview - NOW AUTO-UPDATES IN REAL-TIME */}
 //         <View style={styles.progressSection}>
 //           <ThemeText variant="h2" style={styles.sectionTitle}>
 //             Progress Overview
@@ -368,7 +390,7 @@
 //             </View>
 //           </View>
           
-//           {/* Progress Bar */}
+//           {/* Progress Bar - NOW AUTO-UPDATES IN REAL-TIME */}
 //           <View style={styles.overallProgressBar}>
 //             <View 
 //               style={[
@@ -382,7 +404,7 @@
 //           </View>
 //         </View>
 
-//         {/* Daily Schedule */}
+//         {/* Daily Schedule - NOW AUTO-UPDATES IN REAL-TIME */}
 //         <View style={styles.scheduleSection}>
 //           <ThemeText variant="h2" style={styles.sectionTitle}>
 //             Daily Schedule
@@ -402,6 +424,7 @@
 //             const isToday = dayDate.getTime() === today.getTime();
 //             const isPast = dayDate < today;
 //             const canStartWorkout = hasWorkouts(day) && !day.completed;
+//             const isRecentlyCompleted = recentlyCompletedDay === day.dayIndex; // ✅ ADDED: Visual feedback
             
 //             return (
 //               <View 
@@ -409,7 +432,17 @@
 //                 style={[
 //                   styles.dayCard,
 //                   isToday && { borderColor: theme.colors.primary, borderWidth: 2 },
-//                   day.completed && { borderColor: '#10B981', borderWidth: 2 }
+//                   day.completed && { borderColor: '#10B981', borderWidth: 2, backgroundColor: '#F0FDF4' },
+//                   isRecentlyCompleted && { // ✅ ADDED: Pulse animation for recent completion
+//                     borderColor: '#10B981',
+//                     borderWidth: 3,
+//                     backgroundColor: '#F0FDF4',
+//                     shadowColor: '#10B981',
+//                     shadowOffset: { width: 0, height: 0 },
+//                     shadowOpacity: 0.5,
+//                     shadowRadius: 8,
+//                     elevation: 4
+//                   }
 //                 ]}
 //               >
 //                 <View style={styles.dayHeader}>
@@ -421,6 +454,7 @@
 //                       </ThemeText>
 //                       <ThemeText variant="h3" style={styles.workoutTitle}>
 //                         {workoutTitle}
+//                         {isRecentlyCompleted && ' 🎉'} {/* ✅ ADDED: Celebration emoji */}
 //                       </ThemeText>
 //                     </View>
                     
@@ -429,7 +463,7 @@
 //                       {formatDate(day.date)}
 //                     </ThemeText>
 
-//                     {/* Badges */}
+//                     {/* Badges - NOW AUTO-UPDATES IN REAL-TIME */}
 //                     <View style={styles.badgeContainer}>
 //                       {isToday && (
 //                         <View style={[styles.todayBadge, { backgroundColor: theme.colors.primary }]}>
@@ -438,7 +472,9 @@
 //                       )}
 //                       {day.completed && (
 //                         <View style={[styles.completedBadge, { backgroundColor: '#10B981' }]}>
-//                           <ThemeText variant="caption" style={styles.completedText}>Completed</ThemeText>
+//                           <ThemeText variant="caption" style={styles.completedText}>
+//                             {isRecentlyCompleted ? 'Just Completed! 🎉' : 'Completed ✓'}
+//                           </ThemeText>
 //                         </View>
 //                       )}
 //                       {isPast && !isToday && !day.completed && (
@@ -487,21 +523,22 @@
 //                   </View>
 //                 )}
 
-//                 {/* Action Row */}
+//                 {/* Action Row - NOW AUTO-UPDATES IN REAL-TIME */}
 //                 <View style={styles.actionRow}>
 //                   {/* Status Text */}
 //                   <View style={styles.statusContainer}>
 //                     <ThemeText variant="caption" style={[
 //                       styles.statusText,
-//                       day.completed && { color: '#10B981' }
+//                       day.completed && { color: '#10B981', fontWeight: 'bold' }
 //                     ]}>
-//                       {day.completed ? 'Completed ✓' : 
+//                       {day.completed ? 
+//                        (isRecentlyCompleted ? 'Just completed! 🎉' : 'Completed ✓') : 
 //                        canStartWorkout ? 'Ready to start' : 
 //                        'No workouts'}
 //                     </ThemeText>
 //                   </View>
 
-//                   {/* Start Workout Button */}
+//                   {/* Start Workout Button - HIDES WHEN COMPLETED */}
 //                   {canStartWorkout && (
 //                     <TouchableOpacity
 //                       style={styles.startButton}
@@ -552,7 +589,7 @@
 // export default ProjectDetailScreen;
 
 // src/features/projects/components/ProjectDetailScreen.tsx
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { 
   View, 
   ScrollView, 
@@ -566,9 +603,10 @@ import { useProjectStore } from '../stores/useProjectStore';
 import { useWorkoutStore } from '../../workout/stores/useWorkoutStore';
 import { ThemeText } from '../../../shared/ui/ThemeText';
 import { ThemeView } from '../../../shared/ui/ThemeView';
-import { TrainingProject, DailyWorkout, WorkoutActivity } from '../types/project';
+import { TrainingProject, DailyWorkout } from '../types/project';
 import { WorkoutType } from '../../workout/types/workout';
 import { createStyles } from '../styles/ProjectDetailScreenStyles';
+import { appEvents, EVENT_WORKOUT_COMPLETED } from '../../../shared/utils/events';
 
 interface ProjectDetailRouteParams {
   projectId: string;
@@ -579,11 +617,13 @@ export const ProjectDetailScreen: React.FC = () => {
   const { theme } = useThemeStore();
   const { 
     projects, 
-    updateProject,
     markDayComplete, 
     markDayIncomplete,
-    calculateProjectProgress 
+    calculateProjectProgress,
+    loadUserProjects,
+    lastUpdated
   } = useProjectStore();
+  
   const { openWorkoutModal } = useWorkoutStore();
   const navigation = useNavigation();
   const route = useRoute();
@@ -591,19 +631,69 @@ export const ProjectDetailScreen: React.FC = () => {
 
   const { projectId, project: routeProject } = route.params as ProjectDetailRouteParams;
   
-  const [currentProject, setCurrentProject] = useState<TrainingProject | null>(
-    routeProject || projects.find(p => p.id === projectId) || null
-  );
+  const currentProject = useMemo(() => 
+    projects.find(p => p.id === projectId) || routeProject || null,
+  [projects, projectId, routeProject, lastUpdated]);
+
   const [refreshing, setRefreshing] = useState(false);
   const [updatingDay, setUpdatingDay] = useState<number | null>(null);
   const [expandedDays, setExpandedDays] = useState<Set<number>>(new Set());
+  const [recentlyCompletedDay, setRecentlyCompletedDay] = useState<number | null>(null);
 
-  // Handle back navigation
-  const handleBack = () => {
-    navigation.goBack();
-  };
+  useEffect(() => {
+    console.log('🎯 Setting up workout completion listener for project:', projectId);
+    
+    const handleWorkoutCompleted = (data: any) => {
+      console.log('📢 Workout completion event received in component:', data);
+      
+      if (data.projectContext?.projectId === projectId) {
+        const dayIndex = data.projectContext.dayIndex;
+        console.log('🎯 Workout completed for this project, day:', dayIndex);
+        
+        setRecentlyCompletedDay(dayIndex);
+        
+        setTimeout(() => {
+          setRecentlyCompletedDay(null);
+        }, 2000);
+      }
+    };
 
-  // Toggle day expansion
+    appEvents.on(EVENT_WORKOUT_COMPLETED, handleWorkoutCompleted);
+    
+    return () => {
+      appEvents.off(EVENT_WORKOUT_COMPLETED, handleWorkoutCompleted);
+    };
+  }, [projectId]);
+
+  const loadProjectData = useCallback(() => {
+    console.log('🔄 Loading fresh project data for:', projectId);
+  }, [projectId]);
+
+  useFocusEffect(
+    useCallback(() => {
+      console.log('🎯 ProjectDetailScreen focused');
+      loadProjectData();
+    }, [loadProjectData])
+  );
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      const { useAppStore } = require('../../../shared/stores/useAppStore');
+      const user = useAppStore.getState().user;
+      
+      if (user?.uid) {
+        await loadUserProjects(user.uid);
+        console.log('✅ Refreshed projects from Firebase');
+      }
+    } catch (error) {
+      console.error('Error refreshing project:', error);
+      Alert.alert('Error', 'Failed to refresh project data');
+    } finally {
+      setRefreshing(false);
+    }
+  }, [loadUserProjects]);
+
   const toggleDayExpansion = (dayIndex: number) => {
     const newExpanded = new Set(expandedDays);
     if (newExpanded.has(dayIndex)) {
@@ -614,37 +704,6 @@ export const ProjectDetailScreen: React.FC = () => {
     setExpandedDays(newExpanded);
   };
 
-  // Load project data
-  const loadProject = useCallback(() => {
-    if (routeProject) {
-      setCurrentProject(routeProject);
-      return;
-    }
-    
-    const project = projects.find(p => p.id === projectId);
-    if (project) {
-      setCurrentProject(project);
-    } else {
-      Alert.alert('Error', 'Project not found');
-      navigation.goBack();
-    }
-  }, [projectId, routeProject, projects, navigation]);
-
-  // Refresh when screen comes into focus
-  useFocusEffect(
-    useCallback(() => {
-      loadProject();
-    }, [loadProject])
-  );
-
-  // Refresh control
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    loadProject();
-    setTimeout(() => setRefreshing(false), 1000);
-  }, [loadProject]);
-
-  // Activity helpers
   const getActivityEmoji = (activityType: string) => {
     const emojis: {[key: string]: string} = {
       gym: '🏋️',
@@ -683,7 +742,6 @@ export const ProjectDetailScreen: React.FC = () => {
     });
   };
 
-  // Get workout title for a day
   const getWorkoutTitle = (day: DailyWorkout) => {
     if (day.activities.some(activity => activity.name === 'Rest Day')) {
       return 'Rest Day';
@@ -706,12 +764,10 @@ export const ProjectDetailScreen: React.FC = () => {
     } else if (activityType === 'calisthenics' || activityType === 'yoga') {
       return `${activityType.charAt(0).toUpperCase() + activityType.slice(1)} Session`;
     } else {
-      // Cardio activities
       return `${activityType.charAt(0).toUpperCase() + activityType.slice(1)} Session`;
     }
   };
 
-  // Get workout details for expanded view
   const getWorkoutDetails = (day: DailyWorkout) => {
     if (day.activities.some(activity => activity.name === 'Rest Day')) {
       return [];
@@ -731,53 +787,26 @@ export const ProjectDetailScreen: React.FC = () => {
     console.log('Project:', currentProject.title);
     console.log('Day Index:', dayIndex);
     
-    // Enhanced debugging
-    console.log('🔍 DEBUG: Day activities structure:', day.activities);
-    day.activities.forEach((activity, index) => {
-      console.log(`🔍 Activity ${index}:`, {
-        name: activity.name,
-        type: activity.type,
-        exercises: activity.exercises,
-        exerciseCount: activity.exercises?.length || 0,
-        exerciseTypes: activity.exercises?.map(ex => ex.workoutType)
-      });
-    });
-
-    // For gym workouts, use the first activity type
     const mainActivity = day.activities[0];
     const workoutType = mainActivity.type as WorkoutType;
     
-    // Smart exercise filtering
     const exercises = day.activities.flatMap(activity => {
       if (!activity.exercises || activity.exercises.length === 0) {
         return [];
       }
       
-      // Filter exercises to match the activity type
       const matchingExercises = activity.exercises.filter(exercise => 
         exercise.workoutType === activity.type
       );
       
-      console.log(`🔍 Filtered exercises for ${activity.name}:`, {
-        originalCount: activity.exercises.length,
-        filteredCount: matchingExercises.length,
-        matchingExercises
-      });
-      
       return matchingExercises;
     });
 
-    console.log('🚀 FINAL: Opening workout modal with:', {
+    console.log('🚀 Opening workout modal with:', {
       type: workoutType,
-      totalExerciseCount: exercises.length,
-      exercises: exercises.map(ex => ({
-        name: ex.name,
-        type: ex.workoutType,
-        id: ex.id
-      }))
+      totalExerciseCount: exercises.length
     });
 
-    // Open workout modal
     openWorkoutModal(workoutType, {
       projectContext: {
         projectId: currentProject.id,
@@ -786,14 +815,12 @@ export const ProjectDetailScreen: React.FC = () => {
         dayName: day.name
       },
       preSelectedExercises: exercises,
-      // Pass focus areas for gym workouts
       ...(workoutType === WorkoutType.GYM && day.focusAreas && {
         customMuscleGroups: day.focusAreas
       })
     });
   };
 
-  // Toggle day completion
   const handleToggleDayCompletion = async (dayIndex: number, completed: boolean) => {
     if (!currentProject) return;
 
@@ -806,8 +833,7 @@ export const ProjectDetailScreen: React.FC = () => {
         await markDayIncomplete(currentProject.id, dayIndex);
       }
       
-      // Refresh project data
-      loadProject();
+      console.log('✅ Day completion updated');
       
     } catch (error) {
       console.error('❌ Error updating day completion:', error);
@@ -817,16 +843,18 @@ export const ProjectDetailScreen: React.FC = () => {
     }
   };
 
-  // Calculate progress
+  const progress = useMemo(() => 
+    currentProject ? calculateProjectProgress(currentProject) : null,
+  [currentProject, calculateProjectProgress]);
+
   const calculateProgress = () => {
-    if (!currentProject) return 0;
-    const progress = calculateProjectProgress(currentProject);
+    if (!progress) return 0;
     return Math.round(progress.completionPercentage);
   };
 
   const getDaysCompleted = () => {
-    if (!currentProject) return 0;
-    return currentProject.dailyWorkouts.filter(day => day.completed).length;
+    if (!progress) return 0;
+    return progress.completedDays;
   };
 
   const hasWorkouts = (day: DailyWorkout) => {
@@ -834,7 +862,12 @@ export const ProjectDetailScreen: React.FC = () => {
            day.activities.length > 0;
   };
 
-  // Loading state
+  const sortedWorkouts = useMemo(() => 
+    currentProject ? [...currentProject.dailyWorkouts].sort((a, b) => 
+      new Date(a.date).getTime() - new Date(b.date).getTime()
+    ) : [],
+  [currentProject]);
+
   if (!currentProject) {
     return (
       <ThemeView style={styles.container}>
@@ -846,22 +879,30 @@ export const ProjectDetailScreen: React.FC = () => {
   }
 
   const activityColor = getActivityColor(currentProject.type);
-  const sortedWorkouts = [...currentProject.dailyWorkouts].sort((a, b) => 
-    new Date(a.date).getTime() - new Date(b.date).getTime()
-  );
 
   return (
     <ThemeView style={styles.container}>
-      {/* Custom Header */}
-      <View style={[styles.header, { backgroundColor: theme.colors.card }]}>
-        <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-          <ThemeText style={[styles.backButtonText, { color: theme.colors.primary }]}>
-            ← Back
+      {/* 🚀 UPDATED: Twitter-style Header */}
+      <View style={[styles.header, { backgroundColor: theme.colors.background }]}>
+        {/* Left: Back Arrow (Twitter style - only arrow, no text) */}
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+          activeOpacity={0.7}
+        >
+          <ThemeText style={[styles.backArrow, { color: theme.colors.primary, fontSize: 24 }]}>
+            ←
           </ThemeText>
         </TouchableOpacity>
-        <ThemeText variant="h2" style={styles.headerTitle}>
-          Project Details
-        </ThemeText>
+        
+        {/* Center: Title */}
+        <View style={styles.headerTitleContainer}>
+          <ThemeText variant="h2" style={[styles.headerTitle, { color: theme.colors.text.primary }]}>
+            Workout Plan
+          </ThemeText>
+        </View>
+        
+        {/* Right: Empty spacer for balance */}
         <View style={styles.headerSpacer} />
       </View>
       
@@ -878,68 +919,74 @@ export const ProjectDetailScreen: React.FC = () => {
         }
       >
         
-        {/* Project Header */}
-        <View style={styles.projectHeader}>
-          <ThemeText variant="h1" style={styles.projectTitle}>
-            {currentProject.title}
-          </ThemeText>
-          <ThemeText variant="body" style={styles.projectMeta}>
-            {currentProject.type.charAt(0).toUpperCase() + currentProject.type.slice(1)} • 
-            {currentProject.duration} days • {getDaysCompleted()} completed
-          </ThemeText>
-          <ThemeText variant="caption" style={styles.projectDates}>
-            {formatDate(currentProject.startDate)} - {formatDate(currentProject.endDate)}
-          </ThemeText>
-          {currentProject.description && (
-            <ThemeText variant="body" style={styles.projectDescription}>
-              {currentProject.description}
+        {/* 🚀 COMBINED: Project Header + Progress Overview Card */}
+        <View style={styles.combinedCard}>
+          {/* Project Info Section */}
+          <View style={styles.projectHeader}>
+            <ThemeText variant="h1" style={styles.projectTitle}>
+              {currentProject.title}
             </ThemeText>
-          )}
-        </View>
-
-        {/* Progress Overview */}
-        <View style={styles.progressSection}>
-          <ThemeText variant="h2" style={styles.sectionTitle}>
-            Progress Overview
-          </ThemeText>
-          <View style={styles.statsGrid}>
-            <View style={styles.statItem}>
-              <ThemeText variant="h2" style={[styles.statValue, { color: activityColor }]}>
-                {getDaysCompleted()}
+            <ThemeText variant="body" style={styles.projectMeta}>
+              {currentProject.type.charAt(0).toUpperCase() + currentProject.type.slice(1)} • 
+              {currentProject.duration} days • {getDaysCompleted()} completed
+            </ThemeText>
+            <ThemeText variant="caption" style={styles.projectDates}>
+              {formatDate(currentProject.startDate)} - {formatDate(currentProject.endDate)}
+            </ThemeText>
+            {currentProject.description && (
+              <ThemeText variant="body" style={styles.projectDescription}>
+                {currentProject.description}
               </ThemeText>
-              <ThemeText variant="caption" style={styles.statLabel}>
-                Days Completed
-              </ThemeText>
-            </View>
-            <View style={styles.statItem}>
-              <ThemeText variant="h2" style={[styles.statValue, { color: activityColor }]}>
-                {currentProject.duration - getDaysCompleted()}
-              </ThemeText>
-              <ThemeText variant="caption" style={styles.statLabel}>
-                Days Remaining
-              </ThemeText>
-            </View>
-            <View style={styles.statItem}>
-              <ThemeText variant="h2" style={[styles.statValue, { color: activityColor }]}>
-                {calculateProgress()}%
-              </ThemeText>
-              <ThemeText variant="caption" style={styles.statLabel}>
-                Complete
-              </ThemeText>
-            </View>
+            )}
           </View>
-          
-          {/* Progress Bar */}
-          <View style={styles.overallProgressBar}>
-            <View 
-              style={[
-                styles.overallProgressFill, 
-                { 
-                  backgroundColor: activityColor,
-                  width: `${calculateProgress()}%`
-                }
-              ]} 
-            />
+
+          {/* Divider */}
+          <View style={styles.cardDivider} />
+
+          {/* Progress Overview Section */}
+          <View style={styles.progressSection}>
+            <ThemeText variant="h3" style={styles.sectionTitle}>
+              Progress Overview
+            </ThemeText>
+            <View style={styles.statsGrid}>
+              <View style={styles.statItem}>
+                <ThemeText variant="h2" style={[styles.statValue, { color: activityColor }]}>
+                  {getDaysCompleted()}
+                </ThemeText>
+                <ThemeText variant="caption" style={styles.statLabel}>
+                  Days Completed
+                </ThemeText>
+              </View>
+              <View style={styles.statItem}>
+                <ThemeText variant="h2" style={[styles.statValue, { color: activityColor }]}>
+                  {currentProject.duration - getDaysCompleted()}
+                </ThemeText>
+                <ThemeText variant="caption" style={styles.statLabel}>
+                  Days Remaining
+                </ThemeText>
+              </View>
+              <View style={styles.statItem}>
+                <ThemeText variant="h2" style={[styles.statValue, { color: activityColor }]}>
+                  {calculateProgress()}%
+                </ThemeText>
+                <ThemeText variant="caption" style={styles.statLabel}>
+                  Complete
+                </ThemeText>
+              </View>
+            </View>
+            
+            {/* Progress Bar */}
+            <View style={styles.overallProgressBar}>
+              <View 
+                style={[
+                  styles.overallProgressFill, 
+                  { 
+                    backgroundColor: activityColor,
+                    width: `${calculateProgress()}%`
+                  }
+                ]} 
+              />
+            </View>
           </View>
         </View>
 
@@ -963,6 +1010,7 @@ export const ProjectDetailScreen: React.FC = () => {
             const isToday = dayDate.getTime() === today.getTime();
             const isPast = dayDate < today;
             const canStartWorkout = hasWorkouts(day) && !day.completed;
+            const isRecentlyCompleted = recentlyCompletedDay === day.dayIndex;
             
             return (
               <View 
@@ -970,7 +1018,15 @@ export const ProjectDetailScreen: React.FC = () => {
                 style={[
                   styles.dayCard,
                   isToday && { borderColor: theme.colors.primary, borderWidth: 2 },
-                  day.completed && { borderColor: '#10B981', borderWidth: 2 }
+                  isRecentlyCompleted && {
+                    borderColor: '#10B981',
+                    borderWidth: 3,
+                    shadowColor: '#10B981',
+                    shadowOffset: { width: 0, height: 0 },
+                    shadowOpacity: 0.5,
+                    shadowRadius: 8,
+                    elevation: 4
+                  }
                 ]}
               >
                 <View style={styles.dayHeader}>
@@ -982,6 +1038,7 @@ export const ProjectDetailScreen: React.FC = () => {
                       </ThemeText>
                       <ThemeText variant="h3" style={styles.workoutTitle}>
                         {workoutTitle}
+                        {isRecentlyCompleted && ' 🎉'}
                       </ThemeText>
                     </View>
                     
@@ -995,11 +1052,6 @@ export const ProjectDetailScreen: React.FC = () => {
                       {isToday && (
                         <View style={[styles.todayBadge, { backgroundColor: theme.colors.primary }]}>
                           <ThemeText variant="caption" style={styles.todayText}>Today</ThemeText>
-                        </View>
-                      )}
-                      {day.completed && (
-                        <View style={[styles.completedBadge, { backgroundColor: '#10B981' }]}>
-                          <ThemeText variant="caption" style={styles.completedText}>Completed</ThemeText>
                         </View>
                       )}
                       {isPast && !isToday && !day.completed && (
@@ -1054,15 +1106,16 @@ export const ProjectDetailScreen: React.FC = () => {
                   <View style={styles.statusContainer}>
                     <ThemeText variant="caption" style={[
                       styles.statusText,
-                      day.completed && { color: '#10B981' }
+                      day.completed && { color: '#10B981', fontWeight: 'bold' }
                     ]}>
-                      {day.completed ? 'Completed ✓' : 
+                      {day.completed ? 
+                       (isRecentlyCompleted ? 'Just completed! 🎉' : 'Completed ✓') : 
                        canStartWorkout ? 'Ready to start' : 
                        'No workouts'}
                     </ThemeText>
                   </View>
 
-                  {/* Start Workout Button */}
+                  {/* Start Workout Button - HIDES WHEN COMPLETED */}
                   {canStartWorkout && (
                     <TouchableOpacity
                       style={styles.startButton}

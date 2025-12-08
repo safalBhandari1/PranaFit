@@ -1,3 +1,4 @@
+
 // // src/features/projects/components/CreateProjectScreen.tsx
 // import React, { useState, useRef, useEffect } from 'react';
 // import { 
@@ -36,6 +37,11 @@
 //   const { createProject } = useProjectStore();
 //   const navigation = useNavigation();
 //   const styles = createStyles(theme);
+
+//   // Handle back navigation
+//   const handleBack = () => {
+//     navigation.goBack();
+//   };
 
 //   // Main form state
 //   const [selectedActivity, setSelectedActivity] = useState<ActivityType>('gym');
@@ -729,6 +735,19 @@
 
 //   return (
 //     <ThemeView style={styles.container}>
+//       {/* Custom Header */}
+//       <View style={[styles.header, { backgroundColor: theme.colors.card }]}>
+//         <TouchableOpacity onPress={handleBack} style={styles.backButton}>
+//           <ThemeText style={[styles.backButtonText, { color: theme.colors.primary }]}>
+//             ← Back
+//           </ThemeText>
+//         </TouchableOpacity>
+//         <ThemeText variant="h2" style={styles.headerTitle}>
+//           Create Project Plan
+//         </ThemeText>
+//         <View style={styles.headerSpacer} />
+//       </View>
+
 //       {/* Workout Activity Selector */}
 //       <ScrollView 
 //         horizontal 
@@ -1094,13 +1113,15 @@ import {
   PanResponder,
   TextInput,
   Keyboard,
-  Dimensions
+  Dimensions,
+  ActivityIndicator
 } from 'react-native';
 import { useThemeStore } from '../../../shared/stores/useThemeStore';
 import { useProjectStore } from '../stores/useProjectStore';
 import { useNavigation } from '@react-navigation/native';
 import { ThemeText } from '../../../shared/ui/ThemeText';
 import { ThemeView } from '../../../shared/ui/ThemeView';
+import { useIsOnline } from '../../../shared/hooks/useNetworkStatus'; // 🚀 NEW
 import { EXERCISE_LIBRARY } from '../../../shared/data/exercises';
 import { WorkoutType } from '../../workout/types/workout';
 import { CreateProjectData, DailyWorkout, WorkoutActivity } from '../types/project';
@@ -1122,10 +1143,25 @@ export const CreateProjectScreen: React.FC = () => {
   const { createProject } = useProjectStore();
   const navigation = useNavigation();
   const styles = createStyles(theme);
+  
+  // 🚀 PRODUCTION READY: Enhanced state management
+  const [isCreating, setIsCreating] = useState(false);
+  const isOnline = useIsOnline();
 
   // Handle back navigation
   const handleBack = () => {
-    navigation.goBack();
+    if (isCreating) {
+      Alert.alert(
+        'Creating Project',
+        'Your project is being created. Are you sure you want to leave?',
+        [
+          { text: 'Stay', style: 'cancel' },
+          { text: 'Leave', onPress: () => navigation.goBack() }
+        ]
+      );
+    } else {
+      navigation.goBack();
+    }
   };
 
   // Main form state
@@ -1531,43 +1567,201 @@ export const CreateProjectScreen: React.FC = () => {
     Keyboard.dismiss();
   };
 
-  // Save project - UPDATED WITH PROMPT FOR PROJECT NAME
+  // 🚀 PRODUCTION READY: Enhanced save project with proper error handling
   const handleSaveProject = async () => {
-    try {
-      // Ask for project name
-      Alert.prompt(
-        'Project Name',
-        'Enter a name for your workout plan:',
+    // 🎯 Check network status and warn user
+    if (!isOnline) {
+      Alert.alert(
+        'Offline Mode',
+        'You appear to be offline. Projects created offline will be saved when you reconnect.',
         [
-          {
-            text: 'Cancel',
-            style: 'cancel',
-          },
-          {
-            text: 'Save',
-            onPress: async (projectName) => {
-              if (!projectName || !projectName.trim()) {
-                Alert.alert('Error', 'Please enter a project name');
-                return;
-              }
-
-              await saveProjectWithName(projectName.trim());
-            },
-          },
-        ],
-        'plain-text',
-        '',
-        'default'
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Continue Anyway', onPress: () => promptForProjectName() }
+        ]
       );
-
-    } catch (error) {
-      console.error('Error in save project flow:', error);
-      Alert.alert('Error', 'Failed to save project. Please try again.');
+    } else {
+      promptForProjectName();
     }
   };
 
-  // ✅ UPDATED: Smart exercise list generation based on activity type
-  const saveProjectWithName = async (projectName: string) => {
+  const promptForProjectName = () => {
+    Alert.prompt(
+      'Project Name',
+      'Enter a name for your workout plan:',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Save',
+          onPress: async (projectName) => {
+            if (!projectName || !projectName.trim()) {
+              Alert.alert('Error', 'Please enter a project name');
+              return;
+            }
+            await saveProjectWithName(projectName.trim());
+          },
+        },
+      ],
+      'plain-text',
+      '',
+      'default'
+    );
+  };
+
+//   // 🚀 PRODUCTION READY: Enhanced project creation with loading states
+//   const saveProjectWithName = async (projectName: string) => {
+//     setIsCreating(true);
+    
+//     try {
+//       console.log('🎯 Creating project with name:', projectName);
+      
+//       console.log('📋 PROJECT OVERVIEW:');
+//       console.log('   Project Name:', projectName);
+//       console.log('   Selected Activity:', selectedActivity);
+//       console.log('   Total Scheduled Days:', Object.keys(workoutSelections).length);
+      
+//       console.log('📅 SCHEDULED DAYS DETAIL:');
+//       const scheduledDates = Object.keys(workoutSelections).sort();
+      
+//       if (scheduledDates.length === 0) {
+//         Alert.alert('No Workouts', 'Please schedule at least one workout day before saving.');
+//         setIsCreating(false);
+//         return;
+//       }
+
+//       scheduledDates.forEach((date, index) => {
+//         const selections = workoutSelections[date];
+//         const dateObj = new Date(date);
+//         const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'long' });
+        
+//         console.log(`   📍 Day ${index + 1}: ${date} (${dayName})`);
+        
+//         if (selections.length === 0) {
+//           console.log('      No workouts selected');
+//         } else {
+//           selections.forEach((selection, selIndex) => {
+//             console.log(`      ${selIndex + 1}. ${selection.name} (${selection.type})`);
+//           });
+//         }
+//       });
+  
+//       // Transform workout selections to daily workouts
+//       const dailyWorkouts: DailyWorkout[] = [];
+  
+//       scheduledDates.forEach((date, index) => {
+//         const selections = workoutSelections[date];
+
+//         const activities: WorkoutActivity[] = selections.map(selection => {
+//             let exercises = [];
+            
+//             // ✅ FIX: Check INDIVIDUAL selection type, not global selectedActivity
+//             if (selection.type === WorkoutType.CALISTHENICS || selection.type === WorkoutType.YOGA) {
+//               // For Calisthenics & Yoga: Use user-selected exercises
+//               exercises = EXERCISE_LIBRARY.filter(ex => 
+//                 ex.id === selection.id // Match exact exercise ID
+//               );
+              
+//               console.log(`💾 Saving exercises for ${selection.name}:`, {
+//                 selectionType: selection.type,
+//                 exerciseCount: exercises.length,
+//                 exerciseNames: exercises.map(ex => ex.name)
+//               });
+//             } 
+//             // For Gym & Cardio: Keep exercises array empty (correct behavior)
+            
+//             return {
+//               id: selection.id,
+//               type: selection.type,
+//               name: selection.name,
+//               estimatedDuration: 30,
+//               exercises: exercises
+//             };
+//           });
+  
+//         const focusAreas: string[] = [];
+//         if (selectedMuscleGroups[date]) {
+//           focusAreas.push(...selectedMuscleGroups[date]);
+//         }
+  
+//         dailyWorkouts.push({
+//           dayIndex: index,
+//           name: `Day ${index + 1}`,
+//           date: new Date(date),
+//           completed: false,
+//           activities,
+//           focusAreas
+//         });
+//       });
+  
+//       const projectDuration = dailyWorkouts.length;
+  
+//       const projectData: CreateProjectData = {
+//         title: projectName,
+//         description: `${selectedActivity.charAt(0).toUpperCase() + selectedActivity.slice(1)} workout plan with ${projectDuration} days`,
+//         type: selectedActivity,
+//         duration: projectDuration,
+//         dailyWorkouts,
+//         focusAreas: Array.from(new Set(dailyWorkouts.flatMap(day => day.focusAreas))),
+//         difficulty: 'intermediate' as const,
+//         isPublic: false
+//       };
+  
+//       console.log('💾 Creating project with data:', {
+//         title: projectData.title,
+//         days: projectData.duration,
+//         activities: projectData.dailyWorkouts.length
+//       });
+
+//       // 🚀 KEY CHANGE: Use the enhanced createProject that returns Firebase ID
+//       const firebaseProjectId = await createProject(projectData);
+      
+//       console.log('✅ Project created successfully with ID:', firebaseProjectId);
+
+//       Alert.alert(
+//         'Plan Created! 🎉',
+//         `"${projectName}" has been created with ${dailyWorkouts.length} scheduled workouts.`,
+//         [
+//           {
+//             text: 'View Project',
+//             onPress: () => {
+//               // 🚀 KEY CHANGE: Navigate using Firebase ID immediately
+//                // 🚀 CLEANEST: Cast the entire navigation call
+//                 (navigation.navigate as any)('ProjectDetail', { 
+//                     projectId: firebaseProjectId 
+//                 });
+//             }
+//           }
+//         ]
+//       );
+
+//     } catch (error: any) {
+//       console.error('❌ Error saving project:', error);
+      
+//       // 🚀 PRODUCTION READY: User-friendly error messages
+//       let errorMessage = 'Failed to save project. Please try again.';
+//       let errorTitle = 'Error';
+      
+//       if (error.userMessage) {
+//         errorMessage = error.userMessage;
+//       } else if (error.message?.includes('network') || error.message?.includes('offline')) {
+//         errorTitle = 'Connection Issue';
+//         errorMessage = 'Please check your internet connection and try again.';
+//       } else if (error.message?.includes('authentication')) {
+//         errorTitle = 'Sign In Required';
+//         errorMessage = 'Please sign in to create projects.';
+//       }
+      
+//       Alert.alert(errorTitle, errorMessage);
+//     } finally {
+//       setIsCreating(false);
+//     }
+//   };
+// 🚀 PRODUCTION READY: Enhanced project creation with industry standard navigation
+const saveProjectWithName = async (projectName: string) => {
+    setIsCreating(true);
+    
     try {
       console.log('🎯 ===== USER INPUTS DETAILED LOG =====');
       console.log('📋 PROJECT OVERVIEW:');
@@ -1579,7 +1773,9 @@ export const CreateProjectScreen: React.FC = () => {
       const scheduledDates = Object.keys(workoutSelections).sort();
       
       if (scheduledDates.length === 0) {
-        console.log('   ❌ No workouts scheduled');
+        Alert.alert('No Workouts', 'Please schedule at least one workout day before saving.');
+        setIsCreating(false);
+        return;
       } else {
         scheduledDates.forEach((date, index) => {
           const selections = workoutSelections[date];
@@ -1634,15 +1830,10 @@ export const CreateProjectScreen: React.FC = () => {
   
       // Transform workout selections to daily workouts
       const dailyWorkouts: DailyWorkout[] = [];
-      
-      if (scheduledDates.length === 0) {
-        Alert.alert('No Workouts', 'Please schedule at least one workout day before saving.');
-        return;
-      }
   
       scheduledDates.forEach((date, index) => {
         const selections = workoutSelections[date];
-
+  
         const activities: WorkoutActivity[] = selections.map(selection => {
             let exercises = [];
             
@@ -1737,25 +1928,45 @@ export const CreateProjectScreen: React.FC = () => {
       console.log('💾 ===== END PROJECT DATA LOG =====');
       console.log(''); // Final empty line
   
-      await createProject(projectData);
+      console.log('💾 Creating project with data:', {
+        title: projectData.title,
+        days: projectData.duration,
+        activities: projectData.dailyWorkouts.length
+      });
   
-      Alert.alert(
-        'Plan Created! 🎉',
-        `"${projectName}" has been created with ${dailyWorkouts.length} scheduled workouts.`,
-        [
-          {
-            text: 'View Projects',
-            onPress: () => {
-              // Navigate back to ProjectHomeScreen
-              navigation.goBack();
-            }
-          }
-        ]
-      );
+      // 🚀 Create project (with optimistic updates)
+      const firebaseProjectId = await createProject(projectData);
+      
+      console.log('✅ Project created successfully with ID:', firebaseProjectId);
   
-    } catch (error) {
+      // 🎯 INDUSTRY STANDARD: Navigate to project list instead of detail
+      (navigation.navigate as any)('Projects', {
+        screen: 'ProjectHome', // Your projects list screen
+        params: { 
+          createdProjectId: firebaseProjectId,
+          showSuccess: true 
+        }
+      });
+    } catch (error: any) {
       console.error('❌ Error saving project:', error);
-      Alert.alert('Error', 'Failed to save project. Please try again.');
+      
+      // 🚀 PRODUCTION READY: User-friendly error messages
+      let errorMessage = 'Failed to save project. Please try again.';
+      let errorTitle = 'Error';
+      
+      if (error.userMessage) {
+        errorMessage = error.userMessage;
+      } else if (error.message?.includes('network') || error.message?.includes('offline')) {
+        errorTitle = 'Connection Issue';
+        errorMessage = 'Please check your internet connection and try again.';
+      } else if (error.message?.includes('authentication')) {
+        errorTitle = 'Sign In Required';
+        errorMessage = 'Please sign in to create projects.';
+      }
+      
+      Alert.alert(errorTitle, errorMessage);
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -1820,6 +2031,23 @@ export const CreateProjectScreen: React.FC = () => {
 
   return (
     <ThemeView style={styles.container}>
+      {/* 🚀 NEW: Loading Overlay */}
+      {isCreating && (
+        <View style={styles.loadingOverlay}>
+          <View style={styles.loadingContent}>
+            <ActivityIndicator size="large" color={theme.colors.primary} />
+            <ThemeText style={[styles.loadingText, { color: theme.colors.text.primary }]}>
+              Creating your workout plan...
+            </ThemeText>
+            {!isOnline && (
+              <ThemeText style={[styles.offlineNotice, { color: theme.colors.text.secondary }]}>
+                ⚠️ Working offline - will sync when connected
+              </ThemeText>
+            )}
+          </View>
+        </View>
+      )}
+
       {/* Custom Header */}
       <View style={[styles.header, { backgroundColor: theme.colors.card }]}>
         <TouchableOpacity onPress={handleBack} style={styles.backButton}>
@@ -1833,6 +2061,15 @@ export const CreateProjectScreen: React.FC = () => {
         <View style={styles.headerSpacer} />
       </View>
 
+      {/* 🚀 NEW: Offline Indicator */}
+      {!isOnline && !isCreating && (
+        <View style={[styles.offlineBanner, { backgroundColor: theme.colors.accent }]}>
+          <ThemeText style={styles.offlineText}>
+            ⚠️ You are offline - Projects will save when connected
+          </ThemeText>
+        </View>
+      )}
+
       {/* Workout Activity Selector */}
       <ScrollView 
         horizontal 
@@ -1842,11 +2079,15 @@ export const CreateProjectScreen: React.FC = () => {
       >
         {workoutActivities.map((activity, index) => (
           <View key={activity.id} style={styles.activityItem}>
-            <TouchableOpacity onPress={() => setSelectedActivity(activity.id)}>
+            <TouchableOpacity 
+              onPress={() => setSelectedActivity(activity.id)}
+              disabled={isCreating}
+            >
               <ThemeText style={[
                 styles.activityText,
                 { color: theme.colors.text.primary },
-                selectedActivity === activity.id && { color: theme.colors.primary }
+                selectedActivity === activity.id && { color: theme.colors.primary },
+                isCreating && { opacity: 0.5 }
               ]}>
                 {activity.name}
               </ThemeText>
@@ -1869,9 +2110,11 @@ export const CreateProjectScreen: React.FC = () => {
                 { backgroundColor: theme.colors.card },
                 selectedDate === day.fullDate && [styles.selectedDay, { backgroundColor: theme.colors.primary }],
                 day.isToday && { borderColor: theme.colors.primary, borderWidth: 2 },
-                hasRestDay(day.fullDate) && { borderColor: theme.colors.accent, borderWidth: 2 }
+                hasRestDay(day.fullDate) && { borderColor: theme.colors.accent, borderWidth: 2 },
+                isCreating && { opacity: 0.5 }
               ]}
-              onPress={() => setSelectedDate(day.fullDate)}
+              onPress={() => !isCreating && setSelectedDate(day.fullDate)}
+              disabled={isCreating}
             >
               <ThemeText style={[
                 styles.dayLetter,
@@ -1909,11 +2152,15 @@ export const CreateProjectScreen: React.FC = () => {
       <View style={styles.viewModeContainer}>
         {(['day', 'week', 'month'] as const).map((mode) => (
           <React.Fragment key={mode}>
-            <TouchableOpacity onPress={() => setViewMode(mode)}>
+            <TouchableOpacity 
+              onPress={() => setViewMode(mode)}
+              disabled={isCreating}
+            >
               <ThemeText style={[
                 styles.viewModeText,
                 { color: theme.colors.text.primary },
-                viewMode === mode && { color: theme.colors.primary, fontWeight: 'bold' }
+                viewMode === mode && { color: theme.colors.primary, fontWeight: 'bold' },
+                isCreating && { opacity: 0.5 }
               ]}>
                 {mode.charAt(0).toUpperCase() + mode.slice(1)}
               </ThemeText>
@@ -1939,6 +2186,7 @@ export const CreateProjectScreen: React.FC = () => {
               setSelectedPPL(prev => ({ ...prev, [selectedDate]: [] }));
               setSelectedUpperLower(prev => ({ ...prev, [selectedDate]: [] }));
             }}
+            disabled={isCreating}
           >
             <ThemeText style={styles.removeRestDayText}>Remove</ThemeText>
           </TouchableOpacity>
@@ -1989,9 +2237,14 @@ export const CreateProjectScreen: React.FC = () => {
                   placeholderTextColor={theme.colors.text.secondary}
                   value={searchQuery}
                   onChangeText={setSearchQuery}
+                  editable={!isCreating}
                 />
                 {searchQuery.length > 0 && (
-                  <TouchableOpacity style={styles.clearSearchButton} onPress={clearSearch}>
+                  <TouchableOpacity 
+                    style={styles.clearSearchButton} 
+                    onPress={clearSearch}
+                    disabled={isCreating}
+                  >
                     <ThemeText style={[styles.clearSearchText, { color: theme.colors.text.secondary }]}>✕</ThemeText>
                   </TouchableOpacity>
                 )}
@@ -2001,7 +2254,7 @@ export const CreateProjectScreen: React.FC = () => {
             <TouchableOpacity
               style={[styles.restDayButton, { backgroundColor: theme.colors.card }]}
               onPress={handleRestDaySelect}
-              disabled={isRestDay}
+              disabled={isRestDay || isCreating}
             >
               <ThemeText style={styles.restDayEmoji}>😴</ThemeText>
               <ThemeText style={[styles.restDayText, { color: theme.colors.text.primary }]}>
@@ -2023,10 +2276,12 @@ export const CreateProjectScreen: React.FC = () => {
                     onChangeText={setCustomExerciseName}
                     autoFocus
                     onSubmitEditing={handleAddCustomExercise}
+                    editable={!isCreating}
                   />
                   <TouchableOpacity
                     style={[styles.plusButton, { backgroundColor: theme.colors.primary }]}
                     onPress={handleAddCustomExercise}
+                    disabled={isCreating}
                   >
                     <ThemeText style={styles.plusButtonText}>+</ThemeText>
                   </TouchableOpacity>
@@ -2035,7 +2290,7 @@ export const CreateProjectScreen: React.FC = () => {
                 <TouchableOpacity
                   style={[styles.customExerciseButton, { backgroundColor: theme.colors.card }]}
                   onPress={() => setShowCustomInput(true)}
-                  disabled={isRestDay}
+                  disabled={isRestDay || isCreating}
                 >
                   <ThemeText style={[styles.customExerciseText, { color: theme.colors.text.primary }]}>
                     Custom Exercise
@@ -2058,10 +2313,10 @@ export const CreateProjectScreen: React.FC = () => {
                       borderColor: theme.colors.primary, 
                       borderWidth: 2 
                     },
-                    isRestDay && { opacity: 0.5 }
+                    (isRestDay || isCreating) && { opacity: 0.5 }
                   ]}
                   onPress={() => handleActivityExerciseSelect(exercise)}
-                  disabled={isRestDay}
+                  disabled={isRestDay || isCreating}
                 >
                   <View style={styles.exerciseSelectInfo}>
                     <ThemeText style={[styles.exerciseName, { color: theme.colors.text.primary }]}>
@@ -2080,6 +2335,7 @@ export const CreateProjectScreen: React.FC = () => {
                         e.stopPropagation();
                         toggleFavorite(exercise.id);
                       }}
+                      disabled={isCreating}
                     >
                       <ThemeText style={[
                         styles.favoriteIcon,
@@ -2121,7 +2377,7 @@ export const CreateProjectScreen: React.FC = () => {
                 keyboardType="numeric"
                 placeholder="0"
                 placeholderTextColor={theme.colors.text.secondary}
-                editable={!isRestDay}
+                editable={!isRestDay && !isCreating}
               />
             </View>
 
@@ -2141,7 +2397,7 @@ export const CreateProjectScreen: React.FC = () => {
                   keyboardType="numeric"
                   placeholder="0"
                   placeholderTextColor={theme.colors.text.secondary}
-                  editable={!isRestDay}
+                  editable={!isRestDay && !isCreating}
                 />
               </View>
             )}
@@ -2149,7 +2405,7 @@ export const CreateProjectScreen: React.FC = () => {
             <TouchableOpacity
               style={[styles.restDayButton, { backgroundColor: theme.colors.card, marginTop: 20 }]}
               onPress={handleRestDaySelect}
-              disabled={isRestDay}
+              disabled={isRestDay || isCreating}
             >
               <ThemeText style={styles.restDayEmoji}>😴</ThemeText>
               <ThemeText style={[styles.restDayText, { color: theme.colors.text.primary }]}>
@@ -2166,6 +2422,7 @@ export const CreateProjectScreen: React.FC = () => {
           <TouchableOpacity 
             style={[styles.cancelButton, { backgroundColor: theme.colors.border }]}
             onPress={() => navigation.goBack()}
+            disabled={isCreating}
           >
             <ThemeText style={[styles.cancelButtonText, { color: theme.colors.text.secondary }]}>
               Cancel
@@ -2173,12 +2430,23 @@ export const CreateProjectScreen: React.FC = () => {
           </TouchableOpacity>
           
           <TouchableOpacity 
-            style={[styles.saveButton, { backgroundColor: theme.colors.primary }]}
+            style={[
+              styles.saveButton, 
+              { 
+                backgroundColor: isCreating ? theme.colors.border : theme.colors.primary,
+                opacity: isCreating ? 0.7 : 1
+              }
+            ]}
             onPress={handleSaveProject}
+            disabled={isCreating}
           >
-            <ThemeText style={styles.saveButtonText}>
-              Save Workout Plan
-            </ThemeText>
+            {isCreating ? (
+              <ActivityIndicator size="small" color="#FFF" />
+            ) : (
+              <ThemeText style={styles.saveButtonText}>
+                Save Workout Plan
+              </ThemeText>
+            )}
           </TouchableOpacity>
         </View>
       </View>

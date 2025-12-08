@@ -84,14 +84,14 @@ const WorkoutHomeScreen: React.FC = () => {
         <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
           {/* Welcome Section */}
           <View style={styles.section}>
-            <ThemeText variant="h1" style={{ textAlign: 'center', marginBottom: 10 }}>
+            <ThemeText variant="h1" style={[styles.title, { color: theme.colors.primary }]}>
               Workout Activities
             </ThemeText>
-            <ThemeText variant="body" style={{ textAlign: 'center', lineHeight: 22 }}>
-              Choose your workout type and track your progress
+            <ThemeText variant="body" style={styles.subtitle}>
+            Choose your workout type and track your progress
             </ThemeText>
           </View>
-  
+          
           {/* Workout Grid */}
           <View style={styles.workoutGrid}>
             {WORKOUTS.map((workout) => (

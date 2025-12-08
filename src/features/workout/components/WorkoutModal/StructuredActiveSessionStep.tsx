@@ -1,4 +1,4 @@
-
+// src/features/workout/components/WorkoutModal/StructuredActiveSessionStep.tsx
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   View, 
@@ -22,7 +22,9 @@ const StructuredActiveSessionStep: React.FC = () => {
     setCurrentStep,
     workoutType,
     projectContext,
-    selectedExercises
+    selectedExercises,
+    setStructuredExercises, // 🚀 ADDED: Store tracking data setter
+    structuredExercises // 🚀 ADDED: Get current tracking data from store
   } = useWorkoutStore();
   
   const styles = createStructuredActiveSessionStyles(theme);
@@ -32,8 +34,8 @@ const StructuredActiveSessionStep: React.FC = () => {
   const [isPaused, setIsPaused] = useState(true);
   const [time, setTime] = useState(0);
   
-  // Exercise tracking - transform Exercise[] to StructuredExercise[]
-  const [exercises, setExercises] = useState<StructuredExercise[]>([]);
+  // 🚀 ENHANCED: Exercise tracking - sync with store
+  const [exercises, setExercises] = useState<StructuredExercise[]>(structuredExercises || []);
   const [notes, setNotes] = useState<string>('');
   const [isSaving, setIsSaving] = useState(false);
 
@@ -43,6 +45,14 @@ const StructuredActiveSessionStep: React.FC = () => {
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const setTimersRef = useRef<{[key: string]: NodeJS.Timeout | null}>({});
+
+  // 🚀 CRITICAL: Sync exercises with store for Firebase persistence
+  useEffect(() => {
+    if (exercises.length > 0) {
+      console.log('🔄 Syncing structured exercises to store:', exercises.length, 'exercises');
+      setStructuredExercises(exercises);
+    }
+  }, [exercises, setStructuredExercises]);
 
   // Initialize exercises - transform Exercise[] to StructuredExercise[]
   useEffect(() => {
@@ -139,16 +149,22 @@ const StructuredActiveSessionStep: React.FC = () => {
 
       const durationMinutes = Math.ceil(time / 60);
 
-      // Complete the workout session
-      completeWorkoutSession({
+      console.log('🎯 Saving structured workout with tracking data:', {
+        exerciseCount: exercises.length,
+        totalSets: exercises.reduce((total, ex) => total + (ex.sets?.length || 0), 0),
+        hasProjectContext: !!projectContext
+      });
+
+      // 🚀 ENHANCED: Complete with tracking data automatically captured from store
+      await completeWorkoutSession({
         duration: durationMinutes,
         endTime: new Date(),
         calories: calculateCalories(),
         notes: notes.trim() || undefined,
+        // 🚀 trackingData is automatically captured from store state via structuredExercises
       });
 
-      // Move to completion step
-      setCurrentStep('completion');
+      // Move to completion step happens automatically in store
 
     } catch (error) {
       console.error('❌ Error saving structured workout:', error);
@@ -158,10 +174,6 @@ const StructuredActiveSessionStep: React.FC = () => {
     }
   };
 
-//   const handleBack = () => {
-//     // Go back to exercise selection for structured workouts
-//     setCurrentStep('exercise-selection');
-//   }; 
     const handleBack = () => {
     if (projectContext) {
         // If came from project, go back to exercise selection or close
@@ -218,6 +230,7 @@ const StructuredActiveSessionStep: React.FC = () => {
       reps: numericReps 
     };
     setExercises(updatedExercises);
+    // 🚀 Automatically syncs to store via useEffect
   };
 
   const toggleSetTimer = (exerciseIndex: number, setIndex: number) => {
@@ -247,6 +260,7 @@ const StructuredActiveSessionStep: React.FC = () => {
     }
     
     setExercises(updatedExercises);
+    // 🚀 Automatically syncs to store via useEffect
   };
 
   const resetSetTimer = (exerciseIndex: number, setIndex: number) => {
@@ -264,6 +278,7 @@ const StructuredActiveSessionStep: React.FC = () => {
     set.time = 0;
     set.isActive = false;
     setExercises(updatedExercises);
+    // 🚀 Automatically syncs to store via useEffect
   };
 
   const addSet = (exerciseIndex: number) => {
@@ -280,6 +295,7 @@ const StructuredActiveSessionStep: React.FC = () => {
       isActive: false 
     });
     setExercises(updatedExercises);
+    // 🚀 Automatically syncs to store via useEffect
   };
 
   const removeSet = (exerciseIndex: number) => {
@@ -295,6 +311,7 @@ const StructuredActiveSessionStep: React.FC = () => {
       
       updatedExercises[exerciseIndex].sets!.pop();
       setExercises(updatedExercises);
+      // 🚀 Automatically syncs to store via useEffect
     }
   };
 
@@ -304,6 +321,7 @@ const StructuredActiveSessionStep: React.FC = () => {
     const updatedExercises = [...exercises];
     updatedExercises[exerciseIndex].reps = numericReps;
     setExercises(updatedExercises);
+    // 🚀 Automatically syncs to store via useEffect
   };
 
   const togglePRTimer = (exerciseIndex: number) => {
@@ -333,6 +351,7 @@ const StructuredActiveSessionStep: React.FC = () => {
     }
     
     setExercises(updatedExercises);
+    // 🚀 Automatically syncs to store via useEffect
   };
 
   const resetPRTimer = (exerciseIndex: number) => {
@@ -350,6 +369,7 @@ const StructuredActiveSessionStep: React.FC = () => {
     exercise.duration = 0;
     exercise.isPRTimerActive = false;
     setExercises(updatedExercises);
+    // 🚀 Automatically syncs to store via useEffect
   };
 
   const toggleExercise = (exerciseId: string) => {
@@ -382,7 +402,7 @@ const StructuredActiveSessionStep: React.FC = () => {
   return (
     <ThemeView style={styles.container}>
       {/* Header - Updated with only arrow */}
-      <View style={[styles.header, { backgroundColor: theme.colors.card }]}>
+      {/* <View style={[styles.header, { backgroundColor: theme.colors.card }]}>
         <TouchableOpacity 
           onPress={handleBack} 
           style={styles.backButton}
@@ -395,7 +415,30 @@ const StructuredActiveSessionStep: React.FC = () => {
           Session Tracker
         </ThemeText>
         <View style={styles.headerSpacer} />
-      </View>
+      </View> */}
+      {/* 🚀 Twitter-style Header */}
+    <View style={[styles.header, { backgroundColor: theme.colors.background }]}>
+    {/* Left: Back Arrow (Twitter style - only arrow, no text) */}
+    <TouchableOpacity 
+        style={styles.backButton}
+        onPress={handleBack}
+        activeOpacity={0.7}
+    >
+        <ThemeText style={[styles.backArrow, { color: theme.colors.primary, fontSize: 24 }]}>
+        ←
+        </ThemeText>
+    </TouchableOpacity>
+    
+    {/* Center: Title */}
+    <View style={styles.headerTitleContainer}>
+        <ThemeText variant="h2" style={[styles.headerTitle, { color: theme.colors.text.primary }]}>
+        Session Tracker
+        </ThemeText>
+    </View>
+    
+    {/* Right: Empty spacer for balance */}
+    <View style={styles.headerSpacer} />
+    </View>
       
       {/* Tracking Mode Toggle */}
       <ScrollView 

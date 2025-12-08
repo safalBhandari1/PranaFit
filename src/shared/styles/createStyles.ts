@@ -10,10 +10,25 @@ export const createStyles = (theme: any) => StyleSheet.create({
     flex: 1,
     padding: 20,
   },
+  
   section: {
     alignItems: 'center',
-    marginBottom: 30,
-    paddingTop: 20,
+    marginBottom: theme.spacing.xl,
+    paddingTop: theme.spacing.md,
+  },
+  
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginBottom: theme.spacing.sm,
+    textAlign: 'center',
+  },
+  
+  subtitle: {
+    fontSize: 16,
+    textAlign: 'center',
+    lineHeight: 22,
+    color: theme.colors.text.secondary,
   },
   workoutGrid: {
     flexDirection: 'row',
@@ -138,29 +153,69 @@ export const createStyles = (theme: any) => StyleSheet.create({
     flex: 1,
     paddingHorizontal: 16,
   },
+  // header: {
+  //   flexDirection: 'row',
+  //   alignItems: 'center',
+  //   justifyContent: 'space-between',
+  //   paddingHorizontal: 20,
+  //   paddingVertical: 15,
+  //   borderBottomWidth: 1,
+  //   borderBottomColor: theme.colors.border,
+  // },
+  // backButton: {
+  //   padding: 8,
+  // },
+  // backButtonText: {
+  //   fontSize: 16,
+  //   fontWeight: '600',
+  // },
+  // headerTitle: {
+  //   flex: 1,
+  //   textAlign: 'center',
+  //   fontWeight: '600',
+  // },
+  // headerSpacer: {
+  //   width: 40,
+  // },
+  // 🚀 UPDATED: Twitter-style Header (back arrow only, no text)
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
+    paddingHorizontal: 16,
+    height: 56,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
+    backgroundColor: theme.colors.background,
   },
+
+  // 🚀 UPDATED: Back button with only arrow (Twitter style)
   backButton: {
     padding: 8,
+    marginLeft: -8, // Compensate for padding to align with Twitter style
   },
-  backButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
+
+  // 🚀 UPDATED: Back arrow (no text, just arrow)
+  backArrow: {
+    fontSize: 24,
+    fontWeight: '400',
   },
-  headerTitle: {
+
+  // 🚀 UPDATED: Header title container for centered title
+  headerTitleContainer: {
     flex: 1,
-    textAlign: 'center',
-    fontWeight: '600',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
+
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+
   headerSpacer: {
-    width: 40,
+    width: 40, // Same width as back button for balance
   },
   exerciseSelectionStepcontent: {
     flex: 1,
@@ -380,5 +435,20 @@ export const createStyles = (theme: any) => StyleSheet.create({
     alignItems: 'center',
     padding: 20,
   },
-  
+    loadingContainer: {
+      padding: 20,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    loadingText: {
+      marginTop: 10,
+      textAlign: 'center',
+      color: theme.colors.text.secondary,
+    },
+    fullScreenContainer: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: theme.colors.background,
+    },
 });

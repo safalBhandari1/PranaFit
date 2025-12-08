@@ -1,3 +1,502 @@
+
+// // src/features/workout/components/WorkoutModal/CardioActiveSessionStep.tsx
+// import React, { useState, useEffect, useRef } from 'react';
+// import { 
+//   View, 
+//   TouchableOpacity, 
+//   ScrollView, 
+//   TextInput,
+//   Alert,
+//   ActivityIndicator
+// } from 'react-native';
+// import { useThemeStore } from '../../../../shared/stores/useThemeStore';
+// import { useWorkoutStore } from '../../stores/useWorkoutStore';
+// import { ThemeText } from '../../../../shared/ui/ThemeText';
+// import { ThemeView } from '../../../../shared/ui/ThemeView';
+// import { createCardioActiveSessionStyles } from './styles/cardioActiveSessionStyles';
+// import { WorkoutType, CardioMetrics } from '../../types/workout';
+
+
+// const CardioActiveSessionStep: React.FC = () => {
+//   const { theme } = useThemeStore();
+//   const { 
+//     completeWorkoutSession, 
+//     setCurrentStep,
+//     workoutType,
+//     selectedExercises,
+//     projectContext,
+//     closeWorkoutModal,
+//     setCardioMetrics, // 🚀 ADDED: Store cardio tracking data setter
+//   } = useWorkoutStore();
+  
+//   const styles = createCardioActiveSessionStyles(theme);
+
+//   // Timer states
+//   const [isActive, setIsActive] = useState(false);
+//   const [isPaused, setIsPaused] = useState(true);
+//   const [time, setTime] = useState(0); // in seconds
+  
+//   // Activity data
+//   const [distance, setDistance] = useState<string>('');
+//   const [elevation, setElevation] = useState<string>('');
+//   const [notes, setNotes] = useState<string>('');
+//   const [intensity, setIntensity] = useState<number>(5); // 1-10 scale
+//   const [isSaving, setIsSaving] = useState(false);
+
+//   const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+//   // 🚀 CRITICAL: Sync cardio metrics with store for Firebase persistence
+//   useEffect(() => {
+//     if (isActive) {
+//       const metrics: CardioMetrics = {
+//         distance: distance ? parseFloat(distance) : undefined,
+//         elevation: elevation ? parseFloat(elevation) : undefined,
+//         pace: calculatePace(),
+//         intensity: intensity,
+//       };
+//       console.log('🔄 Syncing cardio metrics to store:', metrics);
+//       setCardioMetrics(metrics);
+//     }
+//   }, [distance, elevation, intensity, isActive, setCardioMetrics]);
+
+//   // Get workout emoji and name based on type
+//   const getWorkoutInfo = () => {
+//     switch (workoutType) {
+//       case WorkoutType.RUNNING:
+//         return { emoji: '🏃', name: 'Running' };
+//       case WorkoutType.CYCLING:
+//         return { emoji: '🚴', name: 'Cycling' };
+//       case WorkoutType.WALKING:
+//         return { emoji: '🚶', name: 'Walking' };
+//       case WorkoutType.ELLIPTICAL:
+//         return { emoji: '🏃‍♂️', name: 'Elliptical' };
+//       case WorkoutType.JUMBA:
+//         return { emoji: '💃', name: 'Jumba' };
+//       default:
+//         return { emoji: '❤️', name: 'Cardio' };
+//     }
+//   };
+
+//   const workoutInfo = getWorkoutInfo();
+
+//   // Calculate pace (min/km)
+//   const calculatePace = () => {
+//     if (!distance || time < 60) return 0;
+//     const distanceNum = parseFloat(distance);
+//     const timeInMinutes = time / 60;
+//     return timeInMinutes / distanceNum;
+//   };
+
+//   // Calculate calories (rough estimate)
+//   const calculateCalories = () => {
+//     const baseCalories = (time / 60) * 8; // ~8 cal/min for moderate cardio
+//     const intensityMultiplier = intensity / 5; // Scale based on intensity
+//     return Math.round(baseCalories * intensityMultiplier);
+//   };
+
+//   // Timer logic
+//   useEffect(() => {
+//     if (isActive && !isPaused) {
+//       timerRef.current = setInterval(() => {
+//         setTime(prevTime => prevTime + 1);
+//       }, 1000);
+//     } else if (timerRef.current) {
+//       clearInterval(timerRef.current);
+//     }
+
+//     return () => {
+//       if (timerRef.current) {
+//         clearInterval(timerRef.current);
+//       }
+//     };
+//   }, [isActive, isPaused]);
+
+//   const handleStart = () => {
+//     setIsActive(true);
+//     setIsPaused(false);
+//   };
+
+//   const handlePause = () => {
+//     setIsPaused(!isPaused);
+//   };
+
+//   const handleStop = () => {
+//     Alert.alert(
+//       'Complete Workout',
+//       `Do you want to save this ${workoutInfo.name.toLowerCase()} session?`,
+//       [
+//         {
+//           text: 'Continue',
+//           style: 'cancel',
+//         },
+//         {
+//           text: 'Save & Finish',
+//           style: 'default',
+//           onPress: handleSaveWorkout,
+//         },
+//       ]
+//     );
+//   };
+
+//   const handleBack = () => {
+//     if (projectContext) {
+//         // If came from project, close modal and return to project
+//         closeWorkoutModal();
+//       } else {
+//         // Cardio workouts skip exercise selection, so always go back to type selection
+//         closeWorkoutModal();
+//       }
+//     };
+
+//   const handleSaveWorkout = async () => {
+//     try {
+//       setIsSaving(true);
+
+//       const durationMinutes = Math.ceil(time / 60);
+//       const distanceNum = distance ? parseFloat(distance) : 0;
+//       const elevationNum = elevation ? parseFloat(elevation) : 0;
+//       const paceValue = distanceNum > 0 ? calculatePace() : 0;
+
+//       console.log('🎯 Saving cardio workout with metrics:', {
+//         workoutType,
+//         hasProjectContext: !!projectContext,
+//         projectContext,
+//         distance: distanceNum,
+//         elevation: elevationNum,
+//         pace: paceValue,
+//         intensity: intensity,
+//         duration: durationMinutes
+//       });
+
+//       // 🚀 ENHANCED: Complete workout - cardioMetrics automatically captured from store
+//       await completeWorkoutSession({
+//         duration: durationMinutes,
+//         endTime: new Date(),
+//         distance: distanceNum,
+//         elevation: elevationNum,
+//         pace: paceValue,
+//         caloriesBurned: calculateCalories(),
+//         intensity: intensity,
+//         notes: notes.trim() || undefined,
+//         // 🚀 cardioMetrics is automatically captured from store state
+//       });
+
+//       // Move to completion step happens automatically in store
+
+//     } catch (error) {
+//       console.error('❌ Error saving cardio workout:', error);
+//       Alert.alert('Error', 'Failed to save workout. Please try again.');
+//     } finally {
+//       setIsSaving(false);
+//     }
+//   };
+
+//   const handleReset = () => {
+//     Alert.alert(
+//       'Reset Workout',
+//       'Are you sure you want to reset? This will erase your current progress.',
+//       [
+//         {
+//           text: 'Cancel',
+//           style: 'cancel',
+//         },
+//         {
+//           text: 'Reset',
+//           style: 'destructive',
+//           onPress: () => {
+//             setIsActive(false);
+//             setIsPaused(true);
+//             setTime(0);
+//             setDistance('');
+//             setElevation('');
+//             setIntensity(5);
+//           },
+//         },
+//       ]
+//     );
+//   };
+
+//   const formatTime = (seconds: number) => {
+//     const mins = Math.floor(seconds / 60);
+//     const secs = seconds % 60;
+//     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+//   };
+
+//   const formatPace = (pace: number) => {
+//     if (pace === 0) return '--:--';
+//     const minutes = Math.floor(pace);
+//     const seconds = Math.round((pace - minutes) * 60);
+//     return `${minutes}:${seconds.toString().padStart(2, '0')}/km`;
+//   };
+
+//   return (
+//     <ThemeView style={styles.container}>
+//       {/* Header */}
+//       <View style={[styles.header, { backgroundColor: theme.colors.card }]}>
+//         <TouchableOpacity 
+//         onPress={handleBack} 
+//         style={styles.backButton}
+//         >
+//         <ThemeText style={[styles.backButtonText, { color: theme.colors.primary }]}>
+//             ← Back
+//         </ThemeText>
+//         </TouchableOpacity>
+//         <ThemeText variant="h2" style={styles.headerTitle}>
+//           {workoutInfo.name}
+//         </ThemeText>
+//         <View style={styles.headerSpacer} />
+//       </View>
+      
+//       <ScrollView style={styles.content}>
+//         {/* Timer Section */}
+//         <View style={styles.timerSection}>
+//           <ThemeText style={[styles.timerEmoji, { color: theme.colors.primary }]}>
+//             {workoutInfo.emoji}
+//           </ThemeText>
+//           <ThemeText variant="h1" style={[styles.timerText, { color: theme.colors.text.primary }]}>
+//             {formatTime(time)}
+//           </ThemeText>
+//           <ThemeText variant="body" style={[styles.timerLabel, { color: theme.colors.text.secondary }]}>
+//             {isActive ? (isPaused ? 'PAUSED' : 'IN PROGRESS') : 'READY'}
+//           </ThemeText>
+//         </View>
+
+//         {/* Control Buttons */}
+//         <View style={styles.controlSection}>
+//           {!isActive ? (
+//             <TouchableOpacity
+//               style={[styles.startButton, { backgroundColor: theme.colors.primary }]}
+//               onPress={handleStart}
+//             >
+//               <ThemeText style={styles.startButtonText}>Start Workout</ThemeText>
+//             </TouchableOpacity>
+//           ) : (
+//             <View style={styles.activeControls}>
+//               <TouchableOpacity
+//                 style={[styles.controlButton, { backgroundColor: theme.colors.border }]}
+//                 onPress={handlePause}
+//               >
+//                 <ThemeText style={[styles.controlButtonText, { color: theme.colors.text.primary }]}>
+//                   {isPaused ? 'Resume' : 'Pause'}
+//                 </ThemeText>
+//               </TouchableOpacity>
+              
+//               <TouchableOpacity
+//                 style={[styles.controlButton, { backgroundColor: theme.colors.accent }]}
+//                 onPress={handleStop}
+//                 disabled={isSaving}
+//               >
+//                 {isSaving ? (
+//                   <ActivityIndicator size="small" color="#FFF" />
+//                 ) : (
+//                   <ThemeText style={[styles.controlButtonText, { color: '#FFF' }]}>
+//                     Finish
+//                   </ThemeText>
+//                 )}
+//               </TouchableOpacity>
+              
+//               <TouchableOpacity
+//                 style={[styles.controlButton, { backgroundColor: theme.colors.border }]}
+//                 onPress={handleReset}
+//               >
+//                 <ThemeText style={[styles.controlButtonText, { color: theme.colors.text.primary }]}>
+//                   Reset
+//                 </ThemeText>
+//               </TouchableOpacity>
+//             </View>
+//           )}
+//         </View>
+
+//         {/* Stats Overview */}
+//         <View style={styles.statsSection}>
+//           <ThemeText variant="h3" style={{ color: theme.colors.text.primary }}>
+//             Workout Stats
+//           </ThemeText>
+          
+//           <View style={styles.statsGrid}>
+//             <View style={styles.statItem}>
+//               <ThemeText variant="h3" style={{ color: theme.colors.primary }}>
+//                 {Math.ceil(time / 60)}
+//               </ThemeText>
+//               <ThemeText variant="body" style={{ color: theme.colors.text.secondary }}>
+//                 Minutes
+//               </ThemeText>
+//             </View>
+            
+//             <View style={styles.statItem}>
+//               <ThemeText variant="h3" style={{ color: theme.colors.primary }}>
+//                 {calculateCalories()}
+//               </ThemeText>
+//               <ThemeText variant="body" style={{ color: theme.colors.text.secondary }}>
+//                 Calories
+//               </ThemeText>
+//             </View>
+            
+//             <View style={styles.statItem}>
+//               <ThemeText variant="h3" style={{ color: theme.colors.primary }}>
+//                 {formatPace(calculatePace())}
+//               </ThemeText>
+//               <ThemeText variant="body" style={{ color: theme.colors.text.secondary }}>
+//                 Pace
+//               </ThemeText>
+//             </View>
+//           </View>
+//         </View>
+
+//         {/* Distance Input */}
+//         <View style={styles.inputSection}>
+//           <ThemeText variant="h3" style={{ color: theme.colors.text.primary }}>
+//             Distance
+//           </ThemeText>
+          
+//           <View style={styles.inputRow}>
+//             <TextInput
+//               style={[
+//                 styles.textInput, 
+//                 { 
+//                   backgroundColor: theme.colors.background,
+//                   color: theme.colors.text.primary,
+//                   borderColor: theme.colors.border
+//                 }
+//               ]}
+//               placeholder="Enter distance"
+//               placeholderTextColor={theme.colors.text.secondary}
+//               value={distance}
+//               onChangeText={setDistance}
+//               keyboardType="decimal-pad"
+//               editable={isActive}
+//             />
+//             <ThemeText variant="body" style={[styles.inputUnit, { color: theme.colors.text.secondary }]}>
+//               km
+//             </ThemeText>
+//           </View>
+//         </View>
+
+//         {/* Elevation Input (Only for Hiking equivalent - using Walking type) */}
+//         {workoutType === WorkoutType.WALKING && (
+//           <View style={styles.inputSection}>
+//             <ThemeText variant="h3" style={{ color: theme.colors.text.primary }}>
+//               Elevation Gain
+//             </ThemeText>
+            
+//             <View style={styles.inputRow}>
+//               <TextInput
+//                 style={[
+//                   styles.textInput, 
+//                   { 
+//                     backgroundColor: theme.colors.background,
+//                     color: theme.colors.text.primary,
+//                     borderColor: theme.colors.border
+//                   }
+//                 ]}
+//                 placeholder="Enter elevation"
+//                 placeholderTextColor={theme.colors.text.secondary}
+//                 value={elevation}
+//                 onChangeText={setElevation}
+//                 keyboardType="decimal-pad"
+//                 editable={isActive}
+//               />
+//               <ThemeText variant="body" style={[styles.inputUnit, { color: theme.colors.text.secondary }]}>
+//                 m
+//               </ThemeText>
+//             </View>
+//           </View>
+//         )}
+
+//         {/* Intensity Slider */}
+//         <View style={styles.inputSection}>
+//           <ThemeText variant="h3" style={{ color: theme.colors.text.primary }}>
+//             Intensity: {intensity}/10
+//           </ThemeText>
+          
+//           <View style={styles.sliderContainer}>
+//             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((level) => (
+//               <TouchableOpacity
+//                 key={level}
+//                 style={[
+//                   styles.intensityDot,
+//                   { backgroundColor: theme.colors.border },
+//                   intensity >= level && { backgroundColor: theme.colors.primary }
+//                 ]}
+//                 onPress={() => setIntensity(level)}
+//                 disabled={!isActive}
+//               />
+//             ))}
+//           </View>
+          
+//           <View style={styles.intensityLabels}>
+//             <ThemeText variant="body" style={{ color: theme.colors.text.secondary }}>
+//               Light
+//             </ThemeText>
+//             <ThemeText variant="body" style={{ color: theme.colors.text.secondary }}>
+//               Moderate
+//             </ThemeText>
+//             <ThemeText variant="body" style={{ color: theme.colors.text.secondary }}>
+//               Hard
+//             </ThemeText>
+//           </View>
+//         </View>
+
+//         {/* Notes */}
+//         <View style={styles.inputSection}>
+//           <ThemeText variant="h3" style={{ color: theme.colors.text.primary }}>
+//             Workout Notes
+//           </ThemeText>
+          
+//           <TextInput
+//             style={[
+//               styles.notesInput, 
+//               { 
+//                 backgroundColor: theme.colors.background,
+//                 color: theme.colors.text.primary,
+//                 borderColor: theme.colors.border
+//               }
+//             ]}
+//             placeholder="Add any notes about your workout..."
+//             placeholderTextColor={theme.colors.text.secondary}
+//             value={notes}
+//             onChangeText={setNotes}
+//             multiline
+//             numberOfLines={3}
+//             textAlignVertical="top"
+//           />
+//         </View>
+//       </ScrollView>
+
+//       {/* Fixed Workout Actions */}
+//       <View style={styles.workoutActions}>
+//         <View style={styles.completeActions}>
+//           <TouchableOpacity 
+//             style={[styles.cancelButton, { backgroundColor: theme.colors.border }]}
+//             onPress={() => setCurrentStep('exercise-selection')}
+//           >
+//             <ThemeText style={[styles.cancelButtonText, { color: theme.colors.text.secondary }]}>
+//               Cancel
+//             </ThemeText>
+//           </TouchableOpacity>
+          
+//           <TouchableOpacity 
+//             style={[styles.completeButton, { backgroundColor: theme.colors.accent }]}
+//             onPress={handleStop}
+//             disabled={isSaving}
+//           >
+//             {isSaving ? (
+//               <ActivityIndicator size="small" color="#FFF" />
+//             ) : (
+//               <ThemeText style={[styles.controlButtonText, { color: '#FFF' }]}>
+//                 Complete Workout
+//               </ThemeText>
+//             )}
+//           </TouchableOpacity>
+//         </View>
+//       </View>
+//     </ThemeView>
+//   );
+// };
+
+// export default CardioActiveSessionStep;
+
+// src/features/workout/components/WorkoutModal/CardioActiveSessionStep.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   View, 
@@ -12,8 +511,7 @@ import { useWorkoutStore } from '../../stores/useWorkoutStore';
 import { ThemeText } from '../../../../shared/ui/ThemeText';
 import { ThemeView } from '../../../../shared/ui/ThemeView';
 import { createCardioActiveSessionStyles } from './styles/cardioActiveSessionStyles';
-import { WorkoutType } from '../../types/workout';
-
+import { WorkoutType, CardioMetrics } from '../../types/workout';
 
 const CardioActiveSessionStep: React.FC = () => {
   const { theme } = useThemeStore();
@@ -22,7 +520,9 @@ const CardioActiveSessionStep: React.FC = () => {
     setCurrentStep,
     workoutType,
     selectedExercises,
+    projectContext,
     closeWorkoutModal,
+    setCardioMetrics,
   } = useWorkoutStore();
   
   const styles = createCardioActiveSessionStyles(theme);
@@ -30,16 +530,30 @@ const CardioActiveSessionStep: React.FC = () => {
   // Timer states
   const [isActive, setIsActive] = useState(false);
   const [isPaused, setIsPaused] = useState(true);
-  const [time, setTime] = useState(0); // in seconds
+  const [time, setTime] = useState(0);
   
   // Activity data
   const [distance, setDistance] = useState<string>('');
   const [elevation, setElevation] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
-  const [intensity, setIntensity] = useState<number>(5); // 1-10 scale
+  const [intensity, setIntensity] = useState<number>(5);
   const [isSaving, setIsSaving] = useState(false);
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Sync cardio metrics with store for Firebase persistence
+  useEffect(() => {
+    if (isActive) {
+      const metrics: CardioMetrics = {
+        distance: distance ? parseFloat(distance) : undefined,
+        elevation: elevation ? parseFloat(elevation) : undefined,
+        pace: calculatePace(),
+        intensity: intensity,
+      };
+      console.log('🔄 Syncing cardio metrics to store:', metrics);
+      setCardioMetrics(metrics);
+    }
+  }, [distance, elevation, intensity, isActive, setCardioMetrics]);
 
   // Get workout emoji and name based on type
   const getWorkoutInfo = () => {
@@ -71,8 +585,8 @@ const CardioActiveSessionStep: React.FC = () => {
 
   // Calculate calories (rough estimate)
   const calculateCalories = () => {
-    const baseCalories = (time / 60) * 8; // ~8 cal/min for moderate cardio
-    const intensityMultiplier = intensity / 5; // Scale based on intensity
+    const baseCalories = (time / 60) * 8;
+    const intensityMultiplier = intensity / 5;
     return Math.round(baseCalories * intensityMultiplier);
   };
 
@@ -121,9 +635,12 @@ const CardioActiveSessionStep: React.FC = () => {
   };
 
   const handleBack = () => {
-    // Cardio workouts skip exercise selection, so always go back to type selection screen workout home
-    closeWorkoutModal();
-};
+    if (projectContext) {
+      closeWorkoutModal();
+    } else {
+      closeWorkoutModal();
+    }
+  };
 
   const handleSaveWorkout = async () => {
     try {
@@ -134,8 +651,19 @@ const CardioActiveSessionStep: React.FC = () => {
       const elevationNum = elevation ? parseFloat(elevation) : 0;
       const paceValue = distanceNum > 0 ? calculatePace() : 0;
 
-      // Complete the workout session with cardio data
-      completeWorkoutSession({
+      console.log('🎯 Saving cardio workout with metrics:', {
+        workoutType,
+        hasProjectContext: !!projectContext,
+        projectContext,
+        distance: distanceNum,
+        elevation: elevationNum,
+        pace: paceValue,
+        intensity: intensity,
+        duration: durationMinutes
+      });
+
+      // Complete workout
+      await completeWorkoutSession({
         duration: durationMinutes,
         endTime: new Date(),
         distance: distanceNum,
@@ -145,9 +673,6 @@ const CardioActiveSessionStep: React.FC = () => {
         intensity: intensity,
         notes: notes.trim() || undefined,
       });
-
-      // Move to completion step
-      setCurrentStep('completion');
 
     } catch (error) {
       console.error('❌ Error saving cardio workout:', error);
@@ -197,125 +722,113 @@ const CardioActiveSessionStep: React.FC = () => {
 
   return (
     <ThemeView style={styles.container}>
-      {/* Header */}
-      <View style={[styles.header, { backgroundColor: theme.colors.card }]}>
+      {/* 🚀 Twitter-style Header */}
+      <View style={[styles.header, { backgroundColor: theme.colors.background }]}>
+        {/* Left: Back Arrow (Twitter style - only arrow, no text) */}
         <TouchableOpacity 
-        onPress={handleBack} 
-        style={styles.backButton}
+          style={styles.backButton}
+          onPress={handleBack}
+          activeOpacity={0.7}
         >
-        <ThemeText style={[styles.backButtonText, { color: theme.colors.primary }]}>
-            ← Back
-        </ThemeText>
+          <ThemeText style={[styles.backArrow, { color: theme.colors.primary, fontSize: 24 }]}>
+            ←
+          </ThemeText>
         </TouchableOpacity>
-        <ThemeText variant="h2" style={styles.headerTitle}>
-          {workoutInfo.name}
-        </ThemeText>
+        
+        {/* Center: Title */}
+        <View style={styles.headerTitleContainer}>
+          <ThemeText variant="h2" style={[styles.headerTitle, { color: theme.colors.text.primary }]}>
+            {workoutInfo.name}
+          </ThemeText>
+        </View>
+        
+        {/* Right: Empty spacer for balance */}
         <View style={styles.headerSpacer} />
       </View>
-      
-      <ScrollView style={styles.content}>
-        {/* Timer Section */}
-        <View style={styles.timerSection}>
-          <ThemeText style={[styles.timerEmoji, { color: theme.colors.primary }]}>
-            {workoutInfo.emoji}
-          </ThemeText>
-          <ThemeText variant="h1" style={[styles.timerText, { color: theme.colors.text.primary }]}>
-            {formatTime(time)}
-          </ThemeText>
-          <ThemeText variant="body" style={[styles.timerLabel, { color: theme.colors.text.secondary }]}>
-            {isActive ? (isPaused ? 'PAUSED' : 'IN PROGRESS') : 'READY'}
-          </ThemeText>
-        </View>
 
-        {/* Control Buttons */}
-        <View style={styles.controlSection}>
-          {!isActive ? (
-            <TouchableOpacity
+      <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {/* Workout Header Card - Similar to GymActiveSessionStep */}
+        <View style={[styles.workoutHeader, { backgroundColor: theme.colors.card }]}>
+          <View style={styles.workoutInfo}>
+            <ThemeText style={[styles.workoutTitle, { color: theme.colors.text.primary }]}>
+              {workoutInfo.name}
+            </ThemeText>
+            <TouchableOpacity 
               style={[styles.startButton, { backgroundColor: theme.colors.primary }]}
-              onPress={handleStart}
+              onPress={isActive ? handlePause : handleStart}
             >
-              <ThemeText style={styles.startButtonText}>Start Workout</ThemeText>
+              <ThemeText style={styles.startButtonText}>
+                {isActive ? (isPaused ? 'Resume' : 'Pause') : 'Start'}
+              </ThemeText>
             </TouchableOpacity>
-          ) : (
-            <View style={styles.activeControls}>
-              <TouchableOpacity
-                style={[styles.controlButton, { backgroundColor: theme.colors.border }]}
-                onPress={handlePause}
-              >
-                <ThemeText style={[styles.controlButtonText, { color: theme.colors.text.primary }]}>
-                  {isPaused ? 'Resume' : 'Pause'}
-                </ThemeText>
-              </TouchableOpacity>
-              
-              <TouchableOpacity
-                style={[styles.controlButton, { backgroundColor: theme.colors.accent }]}
-                onPress={handleStop}
-                disabled={isSaving}
-              >
-                {isSaving ? (
-                  <ActivityIndicator size="small" color="#FFF" />
-                ) : (
-                  <ThemeText style={[styles.controlButtonText, { color: '#FFF' }]}>
-                    Finish
-                  </ThemeText>
-                )}
-              </TouchableOpacity>
-              
-              <TouchableOpacity
-                style={[styles.controlButton, { backgroundColor: theme.colors.border }]}
-                onPress={handleReset}
-              >
-                <ThemeText style={[styles.controlButtonText, { color: theme.colors.text.primary }]}>
-                  Reset
-                </ThemeText>
-              </TouchableOpacity>
-            </View>
-          )}
+          </View>
+          <View style={styles.timerContainer}>
+            <ThemeText style={[styles.timerLabel, { color: theme.colors.text.secondary }]}>
+              Session Time
+            </ThemeText>
+            <ThemeText style={[styles.timer, { color: theme.colors.primary }]}>
+              {formatTime(time)}
+            </ThemeText>
+          </View>
         </View>
 
-        {/* Stats Overview */}
-        <View style={styles.statsSection}>
-          <ThemeText variant="h3" style={{ color: theme.colors.text.primary }}>
-            Workout Stats
-          </ThemeText>
-          
-          <View style={styles.statsGrid}>
-            <View style={styles.statItem}>
-              <ThemeText variant="h3" style={{ color: theme.colors.primary }}>
-                {Math.ceil(time / 60)}
-              </ThemeText>
-              <ThemeText variant="body" style={{ color: theme.colors.text.secondary }}>
-                Minutes
-              </ThemeText>
-            </View>
-            
-            <View style={styles.statItem}>
-              <ThemeText variant="h3" style={{ color: theme.colors.primary }}>
-                {calculateCalories()}
-              </ThemeText>
-              <ThemeText variant="body" style={{ color: theme.colors.text.secondary }}>
-                Calories
-              </ThemeText>
-            </View>
-            
-            <View style={styles.statItem}>
-              <ThemeText variant="h3" style={{ color: theme.colors.primary }}>
-                {formatPace(calculatePace())}
-              </ThemeText>
-              <ThemeText variant="body" style={{ color: theme.colors.text.secondary }}>
-                Pace
-              </ThemeText>
-            </View>
+        {/* Progress Stats - Similar to GymActiveSessionStep */}
+        <View style={[styles.progressStats, { backgroundColor: theme.colors.card }]}>
+          <View style={styles.statItem}>
+            <ThemeText style={[styles.statValue, { color: theme.colors.primary }]}>
+              {Math.ceil(time / 60)}
+            </ThemeText>
+            <ThemeText style={[styles.statLabel, { color: theme.colors.text.secondary }]}>
+              Minutes
+            </ThemeText>
+          </View>
+          <View style={styles.statItem}>
+            <ThemeText style={[styles.statValue, { color: theme.colors.primary }]}>
+              {calculateCalories()}
+            </ThemeText>
+            <ThemeText style={[styles.statLabel, { color: theme.colors.text.secondary }]}>
+              Calories
+            </ThemeText>
+          </View>
+          <View style={styles.statItem}>
+            <ThemeText style={[styles.statValue, { color: theme.colors.primary }]}>
+              {distance ? parseFloat(distance).toFixed(1) : '0.0'}
+            </ThemeText>
+            <ThemeText style={[styles.statLabel, { color: theme.colors.text.secondary }]}>
+              Distance (km)
+            </ThemeText>
           </View>
         </View>
 
         {/* Distance Input */}
-        <View style={styles.inputSection}>
-          <ThemeText variant="h3" style={{ color: theme.colors.text.primary }}>
-            Distance
+        <View style={[styles.inputCard, { backgroundColor: theme.colors.card }]}>
+          <ThemeText style={[styles.inputTitle, { color: theme.colors.text.primary }]}>
+            Distance (km)
           </ThemeText>
-          
-          <View style={styles.inputRow}>
+          <TextInput
+            style={[
+              styles.textInput, 
+              { 
+                backgroundColor: theme.colors.background,
+                color: theme.colors.text.primary,
+                borderColor: theme.colors.border
+              }
+            ]}
+            placeholder="Enter distance in km"
+            placeholderTextColor={theme.colors.text.secondary}
+            value={distance}
+            onChangeText={setDistance}
+            keyboardType="decimal-pad"
+            editable={isActive}
+          />
+        </View>
+
+        {/* Elevation Input (Only for Walking) */}
+        {workoutType === WorkoutType.WALKING && (
+          <View style={[styles.inputCard, { backgroundColor: theme.colors.card }]}>
+            <ThemeText style={[styles.inputTitle, { color: theme.colors.text.primary }]}>
+              Elevation Gain (m)
+            </ThemeText>
             <TextInput
               style={[
                 styles.textInput, 
@@ -325,55 +838,26 @@ const CardioActiveSessionStep: React.FC = () => {
                   borderColor: theme.colors.border
                 }
               ]}
-              placeholder="Enter distance"
+              placeholder="Enter elevation in meters"
               placeholderTextColor={theme.colors.text.secondary}
-              value={distance}
-              onChangeText={setDistance}
+              value={elevation}
+              onChangeText={setElevation}
               keyboardType="decimal-pad"
               editable={isActive}
             />
-            <ThemeText variant="body" style={[styles.inputUnit, { color: theme.colors.text.secondary }]}>
-              km
-            </ThemeText>
-          </View>
-        </View>
-
-        {/* Elevation Input (Only for Hiking equivalent - using Walking type) */}
-        {workoutType === WorkoutType.WALKING && (
-          <View style={styles.inputSection}>
-            <ThemeText variant="h3" style={{ color: theme.colors.text.primary }}>
-              Elevation Gain
-            </ThemeText>
-            
-            <View style={styles.inputRow}>
-              <TextInput
-                style={[
-                  styles.textInput, 
-                  { 
-                    backgroundColor: theme.colors.background,
-                    color: theme.colors.text.primary,
-                    borderColor: theme.colors.border
-                  }
-                ]}
-                placeholder="Enter elevation"
-                placeholderTextColor={theme.colors.text.secondary}
-                value={elevation}
-                onChangeText={setElevation}
-                keyboardType="decimal-pad"
-                editable={isActive}
-              />
-              <ThemeText variant="body" style={[styles.inputUnit, { color: theme.colors.text.secondary }]}>
-                m
-              </ThemeText>
-            </View>
           </View>
         )}
 
-        {/* Intensity Slider */}
-        <View style={styles.inputSection}>
-          <ThemeText variant="h3" style={{ color: theme.colors.text.primary }}>
-            Intensity: {intensity}/10
-          </ThemeText>
+        {/* Intensity Slider - Updated to match GymActiveSessionStep style */}
+        <View style={[styles.inputCard, { backgroundColor: theme.colors.card }]}>
+          <View style={styles.intensityHeader}>
+            <ThemeText style={[styles.inputTitle, { color: theme.colors.text.primary }]}>
+              Intensity
+            </ThemeText>
+            <ThemeText style={[styles.intensityValue, { color: theme.colors.primary }]}>
+              {intensity}/10
+            </ThemeText>
+          </View>
           
           <View style={styles.sliderContainer}>
             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((level) => (
@@ -391,24 +875,23 @@ const CardioActiveSessionStep: React.FC = () => {
           </View>
           
           <View style={styles.intensityLabels}>
-            <ThemeText variant="body" style={{ color: theme.colors.text.secondary }}>
+            <ThemeText variant="caption" style={{ color: theme.colors.text.secondary }}>
               Light
             </ThemeText>
-            <ThemeText variant="body" style={{ color: theme.colors.text.secondary }}>
+            <ThemeText variant="caption" style={{ color: theme.colors.text.secondary }}>
               Moderate
             </ThemeText>
-            <ThemeText variant="body" style={{ color: theme.colors.text.secondary }}>
+            <ThemeText variant="caption" style={{ color: theme.colors.text.secondary }}>
               Hard
             </ThemeText>
           </View>
         </View>
 
-        {/* Notes */}
-        <View style={styles.inputSection}>
-          <ThemeText variant="h3" style={{ color: theme.colors.text.primary }}>
-            Workout Notes
+        {/* Notes Input */}
+        <View style={[styles.inputCard, { backgroundColor: theme.colors.card }]}>
+          <ThemeText style={[styles.inputTitle, { color: theme.colors.text.primary }]}>
+            Session Notes
           </ThemeText>
-          
           <TextInput
             style={[
               styles.notesInput, 
@@ -429,12 +912,12 @@ const CardioActiveSessionStep: React.FC = () => {
         </View>
       </ScrollView>
 
-      {/* Fixed Workout Actions */}
-      <View style={styles.workoutActions}>
+      {/* Fixed Workout Actions - Matching GymActiveSessionStep */}
+      <View style={[styles.workoutActions, { backgroundColor: theme.colors.background }]}>
         <View style={styles.completeActions}>
           <TouchableOpacity 
             style={[styles.cancelButton, { backgroundColor: theme.colors.border }]}
-            onPress={() => setCurrentStep('exercise-selection')}
+            onPress={handleBack}
           >
             <ThemeText style={[styles.cancelButtonText, { color: theme.colors.text.secondary }]}>
               Cancel
@@ -449,7 +932,7 @@ const CardioActiveSessionStep: React.FC = () => {
             {isSaving ? (
               <ActivityIndicator size="small" color="#FFF" />
             ) : (
-              <ThemeText style={[styles.controlButtonText, { color: '#FFF' }]}>
+              <ThemeText style={styles.completeButtonText}>
                 Complete Workout
               </ThemeText>
             )}

@@ -782,4 +782,44 @@ export const createStyles = (theme: any) => StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+   // 🚀 NEW STYLES FOR PRODUCTION FEATURES
+   offlineBanner: {
+    padding: 10,
+    alignItems: 'center',
+    backgroundColor: theme.colors.warning || '#FFA500', // Fallback color
+  },
+  offlineText: {
+    color: '#FFF',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  loadingContent: {
+    backgroundColor: theme.colors.card,
+    padding: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    minWidth: 200,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  offlineNotice: {
+    marginTop: 5,
+    fontSize: 12,
+    textAlign: 'center',
+    fontStyle: 'italic',
+  },
 });
