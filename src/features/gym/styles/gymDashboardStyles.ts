@@ -1,7 +1,5 @@
-
-// // src/features/gym/styles/gymDashboardStyles.ts (UPDATED)
+// // src/features/gym/styles/gymDashboardStyles.ts
 // import { StyleSheet } from 'react-native';
-// import { Platform } from 'react-native';
 
 // export const createGymDashboardStyles = (theme: any) => 
 //   StyleSheet.create({
@@ -10,10 +8,35 @@
 //       backgroundColor: theme.colors.background,
 //     },
     
-//     // 🚀 UPDATED: Twitter-style Header (ProjectHomeScreen Pattern)
+//     // 🚀 Twitter-style Header (56px, matches exercise modal)
+//     header: {
+//       flexDirection: 'row',
+//       alignItems: 'center',
+//       justifyContent: 'space-between',
+//       paddingHorizontal: 16,
+//       height: 56,
+//       borderBottomWidth: 1,
+//       borderBottomColor: theme.colors.border,
+//       backgroundColor: theme.colors.background,
+//     },
+    
+//     headerTitleContainer: {
+//       flex: 1,
+//       alignItems: 'center',
+//       justifyContent: 'center',
+//     },
+    
+//     headerTitle: {
+//       fontSize: 20,
+//       fontWeight: 'bold',
+//       textAlign: 'center',
+//       color: theme.colors.text.primary,
+//     },
+    
+//     // Welcome Header (below Twitter header)
 //     welcomeHeader: {
-//       paddingHorizontal: theme.spacing.md,
-//       paddingTop: Platform.OS === 'ios' ? 60 : theme.spacing.xl,
+//       paddingHorizontal: theme.spacing.lg,
+//       paddingTop: theme.spacing.xl,
 //       paddingBottom: theme.spacing.lg,
 //       backgroundColor: theme.colors.card,
 //       borderBottomWidth: 1,
@@ -40,7 +63,6 @@
 //       flex: 1,
 //     },
     
-//     // 🚀 UPDATED: Matches ProjectHomeScreen title style
 //     welcomeTitle: {
 //       fontSize: 28,
 //       fontWeight: 'bold',
@@ -48,7 +70,6 @@
 //       marginBottom: 4,
 //     },
     
-//     // 🚀 UPDATED: Matches ProjectHomeScreen subtitle style
 //     welcomeSubtitle: {
 //       fontSize: 16,
 //       textAlign: 'center',
@@ -62,17 +83,17 @@
 //       color: theme.colors.text.secondary,
 //     },
     
-//     // 🚀 UPDATED: Scroll View - matches ProjectHomeScreen spacing
+//     // Scroll View
 //     scrollView: {
 //       flex: 1,
-//       padding: theme.spacing.md, // Same as ProjectHomeScreen content
+//       padding: theme.spacing.md,
 //     },
     
-//     // 🚀 UPDATED: Setup Card - EXACT ProjectHomeScreen card style
+//     // Setup Card
 //     setupCard: {
 //       padding: theme.spacing.lg,
 //       borderRadius: theme.borderRadius.lg,
-//       marginBottom: theme.spacing.lg, // Same as projectCard margin
+//       marginBottom: theme.spacing.lg,
 //       shadowColor: '#000',
 //       shadowOffset: { width: 0, height: 2 },
 //       shadowOpacity: 0.1,
@@ -104,7 +125,6 @@
 //       flex: 1,
 //     },
     
-//     // 🚀 UPDATED: Matches projectName style
 //     setupCardTitle: {
 //       fontSize: 18,
 //       fontWeight: 'bold',
@@ -112,7 +132,6 @@
 //       flex: 1,
 //     },
     
-//     // 🚀 UPDATED: Matches projectMeta style
 //     setupCardSubtitle: {
 //       fontSize: 14,
 //       color: theme.colors.text.secondary,
@@ -122,7 +141,6 @@
 //       marginTop: theme.spacing.sm,
 //     },
     
-//     // 🚀 UPDATED: Matches ProjectHomeScreen text styles
 //     setupCardDescription: {
 //       fontSize: 14,
 //       color: theme.colors.text.secondary,
@@ -159,14 +177,11 @@
 //       textAlign: 'center',
 //     },
     
-//     // 🚀 UPDATED: Sections - matches ProjectHomeScreen patterns
+//     // Sections
 //     section: {
-//       alignItems: 'center', // Matches ProjectHomeScreen section
-//       marginBottom: theme.spacing.xl, // Matches ProjectHomeScreen section
-//       paddingTop: theme.spacing.md, // Matches ProjectHomeScreen section
+//       marginBottom: theme.spacing.xl,
 //     },
     
-//     // 🚀 UPDATED: Exact same as ProjectHomeScreen sectionHeader
 //     sectionTitle: {
 //       fontSize: 20,
 //       fontWeight: 'bold',
@@ -182,19 +197,18 @@
 //       marginBottom: theme.spacing.lg,
 //     },
     
-//     // 🚀 UPDATED: Features Grid - matches templateCard layout
+//     // Features Grid
 //     featuresGrid: {
 //       flexDirection: 'row',
 //       flexWrap: 'wrap',
-//       justifyContent: 'space-between', // Matches templatesGrid
+//       justifyContent: 'space-between',
 //     },
     
-//     // 🚀 UPDATED: Feature Card - matches templateCard exactly
 //     featureCard: {
-//       width: '48%', // Same as templateCard
-//       padding: theme.spacing.md, // Same as templateCard
-//       borderRadius: theme.borderRadius.lg, // Same as templateCard
-//       marginBottom: theme.spacing.md, // Same as templateCard
+//       width: '48%',
+//       padding: theme.spacing.md,
+//       borderRadius: theme.borderRadius.lg,
+//       marginBottom: theme.spacing.md,
 //       backgroundColor: theme.colors.card,
 //       shadowColor: '#000',
 //       shadowOffset: { width: 0, height: 1 },
@@ -212,7 +226,6 @@
 //       marginBottom: theme.spacing.sm,
 //     },
     
-//     // 🚀 UPDATED: Matches templateName style
 //     featureTitle: {
 //       fontSize: 16,
 //       fontWeight: '600',
@@ -220,21 +233,19 @@
 //       color: theme.colors.text.primary,
 //     },
     
-//     // 🚀 UPDATED: Matches templateDescription style
 //     featureDescription: {
 //       fontSize: 12,
 //       color: theme.colors.text.secondary,
 //       lineHeight: 16,
 //     },
     
-//     // 🚀 UPDATED: Tips Grid - matches templateCard spacing
+//     // Tips Grid
 //     tipsGrid: {
 //       flexDirection: 'row',
 //       flexWrap: 'wrap',
-//       justifyContent: 'space-between', // Matches templatesGrid
+//       justifyContent: 'space-between',
 //     },
     
-//     // 🚀 UPDATED: Tip Card - matches templateCard dimensions
 //     tipCard: {
 //       width: '100%',
 //       padding: theme.spacing.md,
@@ -253,7 +264,6 @@
 //       marginBottom: theme.spacing.sm,
 //     },
     
-//     // 🚀 UPDATED: Matches templateName style
 //     tipTitle: {
 //       fontSize: 16,
 //       fontWeight: '600',
@@ -261,24 +271,13 @@
 //       color: theme.colors.text.primary,
 //     },
     
-//     // 🚀 UPDATED: Matches templateDescription style
 //     tipDescription: {
 //       fontSize: 12,
 //       color: theme.colors.text.secondary,
 //       lineHeight: 16,
 //     },
     
-//     // Business Dashboard Styles (keep minimal changes)
-//     header: {
-//       paddingHorizontal: theme.spacing.md,
-//       paddingTop: Platform.OS === 'ios' ? 60 : theme.spacing.xl,
-//       paddingBottom: theme.spacing.lg,
-//       backgroundColor: theme.colors.card,
-//       borderBottomWidth: 1,
-//       borderBottomColor: theme.colors.border,
-//     },
-    
-//     // 🚀 UPDATED: Matches ProjectHomeScreen title style
+//     // Business Dashboard Header
 //     gymName: {
 //       fontSize: 28,
 //       fontWeight: 'bold',
@@ -286,7 +285,6 @@
 //       marginBottom: 4,
 //     },
     
-//     // 🚀 UPDATED: Matches ProjectHomeScreen subtitle style
 //     gymSubtitle: {
 //       fontSize: 16,
 //       textAlign: 'center',
@@ -300,7 +298,542 @@
 //   });
 
 
-// src/features/gym/styles/gymDashboardStyles.ts
+
+
+// // src/features/gym/styles/gymDashboardStyles.ts
+// import { StyleSheet } from 'react-native';
+
+// export const createGymDashboardStyles = (theme: any) => 
+//   StyleSheet.create({
+//     container: {
+//       flex: 1,
+//       backgroundColor: theme.colors.background,
+//     },
+    
+//     // Twitter-style Header (matches ProjectHomeScreen)
+//     header: {
+//       flexDirection: 'row',
+//       alignItems: 'center',
+//       justifyContent: 'space-between',
+//       paddingHorizontal: 16,
+//       height: 42,
+//       borderBottomWidth: 1,
+//       borderBottomColor: theme.colors.border,
+//       backgroundColor: theme.colors.background,
+//     },
+    
+//     headerTitleContainer: {
+//       flex: 1,
+//       alignItems: 'center',
+//       justifyContent: 'center',
+//     },
+    
+//     headerTitle: {
+//       fontSize: 20,
+//       fontWeight: 'bold',
+//       textAlign: 'center',
+//       color: theme.colors.text.primary,
+//     },
+    
+//     // Scroll View
+//     scrollView: {
+//       flex: 1,
+//       padding: theme.spacing.md,
+//     },
+    
+//     // Welcome Section - Matches ProjectHomeScreen
+//     section: {
+//       alignItems: 'center',
+//       marginBottom: theme.spacing.xl,
+//       paddingTop: theme.spacing.md,
+//     },
+    
+//     title: {
+//       fontSize: 28,
+//       fontWeight: 'bold',
+//       marginBottom: theme.spacing.sm,
+//       textAlign: 'center',
+//     },
+    
+//     subtitle: {
+//       fontSize: 16,
+//       textAlign: 'center',
+//       lineHeight: 22,
+//       color: theme.colors.text.secondary,
+//     },
+    
+//     // Setup Card
+//     setupCard: {
+//       padding: theme.spacing.lg,
+//       borderRadius: theme.borderRadius.lg,
+//       marginBottom: theme.spacing.lg,
+//       backgroundColor: theme.colors.card,
+//       borderLeftWidth: 4,
+//       borderLeftColor: theme.colors.primary,
+//     },
+    
+//     setupCardHeader: {
+//       flexDirection: 'row',
+//       justifyContent: 'space-between',
+//       alignItems: 'center',
+//       marginBottom: theme.spacing.sm,
+//     },
+    
+//     setupIconContainer: {
+//       width: 44,
+//       height: 44,
+//       borderRadius: theme.borderRadius.md,
+//       backgroundColor: `${theme.colors.primary}15`,
+//       alignItems: 'center',
+//       justifyContent: 'center',
+//       marginRight: theme.spacing.md,
+//     },
+    
+//     setupTextContainer: {
+//       flex: 1,
+//     },
+    
+//     setupCardTitle: {
+//       fontSize: 18,
+//       fontWeight: 'bold',
+//       color: theme.colors.text.primary,
+//       flex: 1,
+//     },
+    
+//     setupCardSubtitle: {
+//       fontSize: 14,
+//       color: theme.colors.text.secondary,
+//     },
+    
+//     setupCardBody: {
+//       marginTop: theme.spacing.sm,
+//     },
+    
+//     setupCardDescription: {
+//       fontSize: 14,
+//       color: theme.colors.text.secondary,
+//       marginBottom: theme.spacing.lg,
+//       lineHeight: 20,
+//     },
+    
+//     setupSteps: {
+//       flexDirection: 'row',
+//       justifyContent: 'space-between',
+//     },
+    
+//     setupStep: {
+//       alignItems: 'center',
+//       flex: 1,
+//     },
+    
+//     setupStepNumber: {
+//       width: 32,
+//       height: 32,
+//       borderRadius: 16,
+//       backgroundColor: `${theme.colors.primary}20`,
+//       color: theme.colors.primary,
+//       fontSize: 16,
+//       fontWeight: '700',
+//       textAlign: 'center',
+//       lineHeight: 32,
+//       marginBottom: 8,
+//     },
+    
+//     setupStepText: {
+//       fontSize: 12,
+//       color: theme.colors.text.secondary,
+//       textAlign: 'center',
+//     },
+    
+//     // Business Dashboard Stats Grid
+//     statsGrid: {
+//       flexDirection: 'row',
+//       flexWrap: 'wrap',
+//       justifyContent: 'space-between',
+//       marginBottom: theme.spacing.lg,
+//     },
+    
+//     statCard: {
+//       width: '48%',
+//       padding: theme.spacing.md,
+//       borderRadius: theme.borderRadius.lg,
+//       marginBottom: theme.spacing.md,
+//       alignItems: 'center',
+//     },
+    
+//     statValue: {
+//       fontSize: 24,
+//       fontWeight: 'bold',
+//       marginBottom: 4,
+//     },
+    
+//     statLabel: {
+//       fontSize: 12,
+//       color: theme.colors.text.secondary,
+//     },
+    
+//     // Quick Actions Grid
+//     actionsGrid: {
+//       flexDirection: 'row',
+//       flexWrap: 'wrap',
+//       justifyContent: 'space-between',
+//     },
+    
+//     actionCard: {
+//       width: '48%',
+//       padding: theme.spacing.md,
+//       borderRadius: theme.borderRadius.lg,
+//       marginBottom: theme.spacing.md,
+//       backgroundColor: theme.colors.card,
+//       borderLeftWidth: 4,
+//     },
+    
+//     actionIconContainer: {
+//       width: 40,
+//       height: 40,
+//       borderRadius: theme.borderRadius.md,
+//       alignItems: 'center',
+//       justifyContent: 'center',
+//       marginBottom: theme.spacing.sm,
+//     },
+    
+//     actionTitle: {
+//       fontSize: 16,
+//       fontWeight: '600',
+//       marginBottom: 4,
+//       color: theme.colors.text.primary,
+//     },
+    
+//     actionDescription: {
+//       fontSize: 12,
+//       color: theme.colors.text.secondary,
+//       lineHeight: 16,
+//     },
+    
+//     // Features Grid
+//     sectionTitle: {
+//       fontSize: 20,
+//       fontWeight: 'bold',
+//       marginBottom: theme.spacing.md,
+//       color: theme.colors.text.primary,
+//     },
+    
+//     sectionSubtitle: {
+//       fontSize: 14,
+//       color: theme.colors.text.secondary,
+//       textAlign: 'center',
+//       lineHeight: 20,
+//       marginBottom: theme.spacing.lg,
+//     },
+    
+//     featuresGrid: {
+//       flexDirection: 'row',
+//       flexWrap: 'wrap',
+//       justifyContent: 'space-between',
+//     },
+    
+//     featureCard: {
+//       width: '48%',
+//       padding: theme.spacing.md,
+//       borderRadius: theme.borderRadius.lg,
+//       marginBottom: theme.spacing.md,
+//       backgroundColor: theme.colors.card,
+//     },
+    
+//     featureIconContainer: {
+//       width: 40,
+//       height: 40,
+//       borderRadius: theme.borderRadius.md,
+//       alignItems: 'center',
+//       justifyContent: 'center',
+//       marginBottom: theme.spacing.sm,
+//     },
+    
+//     featureTitle: {
+//       fontSize: 16,
+//       fontWeight: '600',
+//       marginBottom: 4,
+//       color: theme.colors.text.primary,
+//     },
+    
+//     featureDescription: {
+//       fontSize: 12,
+//       color: theme.colors.text.secondary,
+//       lineHeight: 16,
+//     },
+    
+//     bottomSpacer: {
+//       height: 100,
+//     },
+//   });
+
+
+// import { StyleSheet } from 'react-native';
+
+// export const createGymDashboardStyles = (theme: any) => 
+//   StyleSheet.create({
+//     container: {
+//       flex: 1,
+//       backgroundColor: theme.colors.background,
+//     },
+    
+//     // Scroll View
+//     scrollView: {
+//       flex: 1,
+//       padding: theme.spacing.md,
+//     },
+    
+//     // Section (Used for both Welcome and Gym Info)
+//     section: {
+//       marginBottom: theme.spacing.xl,
+//     },
+    
+//     title: {
+//       fontSize: 28,
+//       fontWeight: 'bold',
+//       marginBottom: theme.spacing.xs, // Reduced from sm
+//       color: theme.colors.text.primary,
+//     },
+    
+//     subtitle: {
+//       fontSize: 16,
+//       lineHeight: 22,
+//       color: theme.colors.text.secondary,
+//     },
+    
+//     // Gym Logo Container
+//     gymLogoContainer: {
+//       alignItems: 'flex-start',
+//       marginBottom: theme.spacing.md,
+//     },
+    
+//     gymLogo: {
+//       width: 60,
+//       height: 60,
+//       borderRadius: theme.borderRadius.lg,
+//       alignItems: 'center',
+//       justifyContent: 'center',
+//       borderWidth: 2,
+//       borderColor: `${theme.colors.primary}30`,
+//     },
+    
+//     // Setup Card (for setup screen)
+//     setupCard: {
+//       padding: theme.spacing.lg,
+//       borderRadius: theme.borderRadius.lg,
+//       marginBottom: theme.spacing.lg,
+//       backgroundColor: theme.colors.card,
+//       borderLeftWidth: 4,
+//       borderLeftColor: theme.colors.primary,
+//     },
+    
+//     setupCardHeader: {
+//       flexDirection: 'row',
+//       justifyContent: 'space-between',
+//       alignItems: 'center',
+//       marginBottom: theme.spacing.sm,
+//     },
+    
+//     setupIconContainer: {
+//       width: 44,
+//       height: 44,
+//       borderRadius: theme.borderRadius.md,
+//       backgroundColor: `${theme.colors.primary}15`,
+//       alignItems: 'center',
+//       justifyContent: 'center',
+//       marginRight: theme.spacing.md,
+//     },
+    
+//     setupTextContainer: {
+//       flex: 1,
+//     },
+    
+//     setupCardTitle: {
+//       fontSize: 18,
+//       fontWeight: 'bold',
+//       color: theme.colors.text.primary,
+//       flex: 1,
+//     },
+    
+//     setupCardSubtitle: {
+//       fontSize: 14,
+//       color: theme.colors.text.secondary,
+//     },
+    
+//     setupCardBody: {
+//       marginTop: theme.spacing.sm,
+//     },
+    
+//     setupCardDescription: {
+//       fontSize: 14,
+//       color: theme.colors.text.secondary,
+//       marginBottom: theme.spacing.lg,
+//       lineHeight: 20,
+//     },
+    
+//     setupSteps: {
+//       flexDirection: 'row',
+//       justifyContent: 'space-between',
+//     },
+    
+//     setupStep: {
+//       alignItems: 'center',
+//       flex: 1,
+//     },
+    
+//     setupStepNumber: {
+//       width: 32,
+//       height: 32,
+//       borderRadius: 16,
+//       backgroundColor: `${theme.colors.primary}20`,
+//       color: theme.colors.primary,
+//       fontSize: 16,
+//       fontWeight: '700',
+//       textAlign: 'center',
+//       lineHeight: 32,
+//       marginBottom: 8,
+//     },
+    
+//     setupStepText: {
+//       fontSize: 12,
+//       color: theme.colors.text.secondary,
+//       textAlign: 'center',
+//     },
+    
+//     // Status Card (for gym setup)
+//     statusCard: {
+//       padding: theme.spacing.lg,
+//       borderRadius: theme.borderRadius.lg,
+//       marginBottom: theme.spacing.lg,
+//       backgroundColor: theme.colors.card,
+//       borderLeftWidth: 4,
+//       borderLeftColor: theme.colors.primary,
+//     },
+    
+//     statusCardHeader: {
+//       flexDirection: 'row',
+//       alignItems: 'center',
+//       marginBottom: theme.spacing.md,
+//     },
+    
+//     statusIconContainer: {
+//       width: 44,
+//       height: 44,
+//       borderRadius: theme.borderRadius.md,
+//       alignItems: 'center',
+//       justifyContent: 'center',
+//       marginRight: theme.spacing.md,
+//     },
+    
+//     statusTextContainer: {
+//       flex: 1,
+//     },
+    
+//     statusCardTitle: {
+//       fontSize: 18,
+//       fontWeight: 'bold',
+//       color: theme.colors.text.primary,
+//     },
+    
+//     statusCardSubtitle: {
+//       fontSize: 14,
+//       color: theme.colors.text.secondary,
+//     },
+    
+//     statusCardBody: {
+//       // Body content styles
+//     },
+    
+//     statusRow: {
+//       marginVertical: theme.spacing.sm,
+//     },
+    
+//     statusItem: {
+//       flexDirection: 'row',
+//       alignItems: 'center',
+//     },
+    
+//     statusItemContent: {
+//       marginLeft: theme.spacing.md,
+//       flex: 1,
+//     },
+    
+//     statusItemLabel: {
+//       fontSize: 12,
+//       color: theme.colors.text.secondary,
+//       textTransform: 'uppercase',
+//       letterSpacing: 0.5,
+//       marginBottom: 2,
+//     },
+    
+//     statusItemValue: {
+//       fontSize: 18,
+//       fontWeight: 'bold',
+//       color: theme.colors.text.primary,
+//     },
+    
+//     statusDivider: {
+//       height: 1,
+//       backgroundColor: theme.colors.border,
+//       marginVertical: theme.spacing.md,
+//     },
+    
+//     // Section Titles
+//     sectionTitle: {
+//       fontSize: 20,
+//       fontWeight: 'bold',
+//       marginBottom: 4, // Reduced from md
+//       color: theme.colors.text.primary,
+//     },
+    
+//     sectionSubtitle: {
+//       fontSize: 14,
+//       color: theme.colors.text.secondary,
+//       marginBottom: theme.spacing.lg,
+//     },
+    
+//     // Features Grid (Used for both setup and gym dashboard)
+//     featuresGrid: {
+//       flexDirection: 'row',
+//       flexWrap: 'wrap',
+//       justifyContent: 'space-between',
+//     },
+    
+//     featureCard: {
+//       width: '48%',
+//       padding: theme.spacing.md,
+//       borderRadius: theme.borderRadius.lg,
+//       marginBottom: theme.spacing.md,
+//       backgroundColor: theme.colors.card,
+//     },
+    
+//     featureIconContainer: {
+//       width: 40,
+//       height: 40,
+//       borderRadius: theme.borderRadius.md,
+//       alignItems: 'center',
+//       justifyContent: 'center',
+//       marginBottom: theme.spacing.sm,
+//     },
+    
+//     featureTitle: {
+//       fontSize: 16,
+//       fontWeight: '600',
+//       marginBottom: 4,
+//       color: theme.colors.text.primary,
+//     },
+    
+//     featureDescription: {
+//       fontSize: 12,
+//       color: theme.colors.text.secondary,
+//       lineHeight: 16,
+//     },
+    
+//     bottomSpacer: {
+//       height: 100,
+//     },
+//   });
+
 import { StyleSheet } from 'react-native';
 
 export const createGymDashboardStyles = (theme: any) => 
@@ -310,13 +843,13 @@ export const createGymDashboardStyles = (theme: any) =>
       backgroundColor: theme.colors.background,
     },
     
-    // 🚀 Twitter-style Header (56px, matches exercise modal)
+    // Header
     header: {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'space-between',
       paddingHorizontal: 16,
-      height: 56,
+      height: 42,
       borderBottomWidth: 1,
       borderBottomColor: theme.colors.border,
       backgroundColor: theme.colors.background,
@@ -335,60 +868,52 @@ export const createGymDashboardStyles = (theme: any) =>
       color: theme.colors.text.primary,
     },
     
-    // Welcome Header (below Twitter header)
-    welcomeHeader: {
-      paddingHorizontal: theme.spacing.lg,
-      paddingTop: theme.spacing.xl,
-      paddingBottom: theme.spacing.lg,
-      backgroundColor: theme.colors.card,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.colors.border,
+    // Scroll View
+    scrollView: {
+      flex: 1,
+      padding: theme.spacing.md,
     },
     
-    welcomeTopRow: {
+    // Section
+    section: {
+      marginBottom: theme.spacing.xl,
+    },
+    
+    centeredSection: {
+      alignItems: 'center',
+    },
+    
+    title: {
+      fontSize: 28,
+      fontWeight: 'bold',
+      marginBottom: 4,
+      color: theme.colors.text.primary,
+    },
+    
+    subtitle: {
+      fontSize: 16,
+      lineHeight: 22,
+      color: theme.colors.text.secondary,
+    },
+    
+    // Gym Header Row (with biceps icon)
+    gymHeaderRow: {
       flexDirection: 'row',
       alignItems: 'center',
       marginBottom: theme.spacing.md,
     },
     
-    welcomeIconContainer: {
+    gymLogo: {
       width: 48,
       height: 48,
-      borderRadius: theme.borderRadius.md,
-      backgroundColor: `${theme.colors.primary}15`,
+      borderRadius: 12,
       alignItems: 'center',
       justifyContent: 'center',
       marginRight: theme.spacing.md,
     },
     
-    welcomeTextContainer: {
+    gymHeaderText: {
       flex: 1,
-    },
-    
-    welcomeTitle: {
-      fontSize: 28,
-      fontWeight: 'bold',
-      color: theme.colors.text.primary,
-      marginBottom: 4,
-    },
-    
-    welcomeSubtitle: {
-      fontSize: 16,
-      textAlign: 'center',
-      lineHeight: 22,
-      color: theme.colors.text.secondary,
-    },
-    
-    welcomeDescription: {
-      fontSize: 15,
-      lineHeight: 22,
-      color: theme.colors.text.secondary,
-    },
-    
-    // Scroll View
-    scrollView: {
-      flex: 1,
-      padding: theme.spacing.md,
     },
     
     // Setup Card
@@ -396,11 +921,6 @@ export const createGymDashboardStyles = (theme: any) =>
       padding: theme.spacing.lg,
       borderRadius: theme.borderRadius.lg,
       marginBottom: theme.spacing.lg,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
-      elevation: 3,
       backgroundColor: theme.colors.card,
       borderLeftWidth: 4,
       borderLeftColor: theme.colors.primary,
@@ -408,7 +928,6 @@ export const createGymDashboardStyles = (theme: any) =>
     
     setupCardHeader: {
       flexDirection: 'row',
-      justifyContent: 'space-between',
       alignItems: 'center',
       marginBottom: theme.spacing.sm,
     },
@@ -431,7 +950,6 @@ export const createGymDashboardStyles = (theme: any) =>
       fontSize: 18,
       fontWeight: 'bold',
       color: theme.colors.text.primary,
-      flex: 1,
     },
     
     setupCardSubtitle: {
@@ -479,23 +997,99 @@ export const createGymDashboardStyles = (theme: any) =>
       textAlign: 'center',
     },
     
-    // Sections
-    section: {
-      marginBottom: theme.spacing.xl,
+    // Status Card (matching ProfileScreen style)
+    statusCard: {
+      padding: theme.spacing.md,
+      borderRadius: theme.borderRadius.md,
+      marginBottom: theme.spacing.lg,
+      backgroundColor: theme.colors.card,
+      borderLeftWidth: 4,
+      borderLeftColor: theme.colors.primary,
     },
     
+    statusCardHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: theme.spacing.md,
+    },
+    
+    statusIconContainer: {
+      width: 36,
+      height: 36,
+      borderRadius: 8,
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginRight: theme.spacing.md,
+    },
+    
+    statusTextContainer: {
+      flex: 1,
+    },
+    
+    statusCardTitle: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: theme.colors.text.primary,
+    },
+    
+    statusCardBody: {
+      // Body content
+    },
+    
+    statusRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: 12,
+    },
+    
+    statusLabelContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flex: 1,
+    },
+    
+    statusIcon: {
+      marginRight: 10,
+    },
+    
+    statusLabel: {
+      fontSize: 15,
+      color: theme.colors.text.primary,
+    },
+    
+    statusValue: {
+      fontSize: 15,
+      fontWeight: '500',
+      textAlign: 'right',
+    },
+    
+    statusValueContainer: {
+      alignItems: 'flex-end',
+    },
+    
+    statusSubValue: {
+      fontSize: 13,
+      color: theme.colors.text.secondary,
+      marginTop: 2,
+    },
+    
+    statusDivider: {
+      height: 1,
+      backgroundColor: theme.colors.border,
+    },
+    
+    // Section Titles
     sectionTitle: {
       fontSize: 20,
       fontWeight: 'bold',
-      marginBottom: theme.spacing.md,
+      marginBottom: 4,
       color: theme.colors.text.primary,
     },
     
     sectionSubtitle: {
       fontSize: 14,
       color: theme.colors.text.secondary,
-      textAlign: 'center',
-      lineHeight: 20,
       marginBottom: theme.spacing.lg,
     },
     
@@ -512,11 +1106,6 @@ export const createGymDashboardStyles = (theme: any) =>
       borderRadius: theme.borderRadius.lg,
       marginBottom: theme.spacing.md,
       backgroundColor: theme.colors.card,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.1,
-      shadowRadius: 3,
-      elevation: 2,
     },
     
     featureIconContainer: {
@@ -539,59 +1128,6 @@ export const createGymDashboardStyles = (theme: any) =>
       fontSize: 12,
       color: theme.colors.text.secondary,
       lineHeight: 16,
-    },
-    
-    // Tips Grid
-    tipsGrid: {
-      flexDirection: 'row',
-      flexWrap: 'wrap',
-      justifyContent: 'space-between',
-    },
-    
-    tipCard: {
-      width: '100%',
-      padding: theme.spacing.md,
-      borderRadius: theme.borderRadius.lg,
-      marginBottom: theme.spacing.md,
-      backgroundColor: theme.colors.card,
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.1,
-      shadowRadius: 3,
-      elevation: 2,
-    },
-    
-    tipNumber: {
-      fontSize: 24,
-      marginBottom: theme.spacing.sm,
-    },
-    
-    tipTitle: {
-      fontSize: 16,
-      fontWeight: '600',
-      marginBottom: 4,
-      color: theme.colors.text.primary,
-    },
-    
-    tipDescription: {
-      fontSize: 12,
-      color: theme.colors.text.secondary,
-      lineHeight: 16,
-    },
-    
-    // Business Dashboard Header
-    gymName: {
-      fontSize: 28,
-      fontWeight: 'bold',
-      color: theme.colors.text.primary,
-      marginBottom: 4,
-    },
-    
-    gymSubtitle: {
-      fontSize: 16,
-      textAlign: 'center',
-      lineHeight: 22,
-      color: theme.colors.text.secondary,
     },
     
     bottomSpacer: {

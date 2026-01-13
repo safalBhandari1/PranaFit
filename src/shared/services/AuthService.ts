@@ -1,4 +1,3 @@
-
 // // src/shared/services/AuthService.ts
 // import { 
 //   createUserWithEmailAndPassword,
@@ -9,36 +8,48 @@
 // } from 'firebase/auth';
 // import { auth } from '../../../firebase/config/firebaseConfig';
 // import { userRepository } from './repositories/UserRepository';
-// import { User } from '../types/domain/core/user';
+// import { User, UserRole } from '../types/domain/core/user';
+// import { gymRepository } from './repositories/GymRepository'; // We'll create this tomorrow
 
 // export class AuthService {
-//   async signUp(email: string, password: string, name: string): Promise<User> {
+//   async signUp(
+//     email: string, 
+//     password: string, 
+//     name: string,
+//     role: UserRole = 'member',
+//     phoneNumber?: string
+//   ): Promise<User> {
 //     try {
 //       // Create Firebase auth user
 //       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+//       const firebaseUid = userCredential.user.uid; // Store Firebase UID
       
 //       // Update profile with name
 //       await updateProfile(userCredential.user, {
 //         displayName: name
 //       });
-
-//       // Create user document in Firestore
+  
+//       // Create user document in Firestore with role
 //       const userData: Omit<User, 'id'> = {
-//         uid: userCredential.user.uid, // ✅ MOVED: uid here instead of in return
+//         uid: firebaseUid, // Use Firebase UID
 //         email,
 //         displayName: name,
+//         role,
+//         phoneNumber,
 //         createdAt: new Date(),
 //         updatedAt: new Date(),
 //         lastActive: new Date()
 //       };
-
-//       const userId = await userRepository.create(userData);
-
+  
+//       // Pass data WITH uid to repository
+//       const documentId = await userRepository.create(userData);
+  
+//       // Return user with correct uid (NOT overwritten)
 //       return {
 //         ...userData,
-//         // ✅ REMOVED: uid: userId - already included in userData spread
+//         // uid stays as firebaseUid, NOT documentId
 //       };
-
+  
 //     } catch (error) {
 //       console.error('Sign up error:', error);
 //       throw error;
@@ -55,6 +66,11 @@
 //       if (!user) {
 //         throw new Error('User data not found');
 //       }
+
+//       // Update last active timestamp
+//       await userRepository.update(user.uid!, {
+//         lastActive: new Date()
+//       });
 
 //       return user;
 
@@ -80,12 +96,155 @@
 //   onAuthStateChanged(callback: (user: FirebaseUser | null) => void) {
 //     return auth.onAuthStateChanged(callback);
 //   }
+
+//   // Helper method to check user role - ADDED
+//   getUserRole(user: User | null): UserRole {
+//     return user?.role || 'member';
+//   }
+
+//   // Helper method to check if user is gym owner - ADDED
+//   isGymOwner(user: User | null): boolean {
+//     return user?.role === 'gym_owner';
+//   }
+
+//   // Helper method to check if user is gym staff - ADDED
+//   isGymStaff(user: User | null): boolean {
+//     return user?.role === 'gym_staff' || user?.role === 'gym_trainer';
+//   }
 // }
 
 // export const authService = new AuthService();
 
 
-// src/shared/services/AuthService.ts
+// import { 
+//   createUserWithEmailAndPassword,
+//   signInWithEmailAndPassword,
+//   signOut,
+//   updateProfile,
+//   User as FirebaseUser
+// } from 'firebase/auth';
+// import { auth } from '../../../firebase/config/firebaseConfig';
+// import { userRepository } from './repositories/UserRepository';
+// import { User, UserRole, UserRegistrationData } from '../types/domain/core/user';
+// import { gymRepository } from './repositories/GymRepository';
+
+// export class AuthService {
+//   async signUp(registrationData: UserRegistrationData): Promise<User> {
+//     try {
+//       const { email, password, name, role, phoneNumber } = registrationData;
+      
+//       // Create Firebase auth user
+//       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+//       const firebaseUid = userCredential.user.uid;
+      
+//       // Update profile with name
+//       await updateProfile(userCredential.user, {
+//         displayName: name
+//       });
+  
+//       // Create user document in Firestore with NEW structure
+//       const userData: Omit<User, 'id'> = {
+//         uid: firebaseUid, // Use Firebase UID
+//         email,
+//         displayName: name,
+//         role: role || 'fitness_user', // Default to fitness_user
+//         phoneNumber,
+        
+//         // NEW: Initialize empty gym memberships
+//         gymMemberships: [],
+//         // currentGymId will be undefined initially
+        
+//         // Timestamps
+//         createdAt: new Date(),
+//         updatedAt: new Date(),
+//         lastActive: new Date()
+//       };
+  
+//       // Create user document
+//       const documentId = await userRepository.create(userData);
+//       console.log(`✅ User created with ID: ${documentId}`);
+  
+//       // Return user with correct uid
+//       return {
+//         ...userData,
+//       };
+  
+//     } catch (error) {
+//       console.error('Sign up error:', error);
+//       throw error;
+//     }
+//   }
+
+//   async signIn(email: string, password: string): Promise<User> {
+//     try {
+//       const userCredential = await signInWithEmailAndPassword(auth, email, password);
+//       const firebaseUser = userCredential.user;
+
+//       // Get user data from Firestore
+//       const user = await userRepository.getByEmail(email);
+//       if (!user) {
+//         throw new Error('User data not found');
+//       }
+
+//       // Update last active timestamp
+//       await userRepository.update(user.uid!, {
+//         lastActive: new Date(),
+//         updatedAt: new Date()
+//       });
+
+//       return user;
+
+//     } catch (error) {
+//       console.error('Sign in error:', error);
+//       throw error;
+//     }
+//   }
+
+//   async signOut(): Promise<void> {
+//     try {
+//       await signOut(auth);
+//     } catch (error) {
+//       console.error('Sign out error:', error);
+//       throw error;
+//     }
+//   }
+
+//   getCurrentUser(): FirebaseUser | null {
+//     return auth.currentUser;
+//   }
+
+//   onAuthStateChanged(callback: (user: FirebaseUser | null) => void) {
+//     return auth.onAuthStateChanged(callback);
+//   }
+
+//   // NEW: Check if user has any gym memberships
+//   hasGymAccess(user: User | null): boolean {
+//     if (!user) return false;
+//     return (user.gymMemberships?.length || 0) > 0;
+//   }
+
+//   // NEW: Check if user is a pure fitness user (no gyms)
+//   isPureFitnessUser(user: User | null): boolean {
+//     if (!user) return false;
+//     return user.role === 'fitness_user' && (user.gymMemberships?.length || 0) === 0;
+//   }
+
+//   // NEW: Check if user is owner of any gym
+//   isAnyGymOwner(user: User | null): boolean {
+//     if (!user) return false;
+//     return user.gymMemberships?.some(m => m.gymRole === 'owner') || false;
+//   }
+
+//   // NEW: Check if user is staff/trainer of any gym
+//   isAnyGymStaff(user: User | null): boolean {
+//     if (!user) return false;
+//     return user.gymMemberships?.some(m => ['staff', 'trainer'].includes(m.gymRole)) || false;
+//   }
+// }
+
+// export const authService = new AuthService();
+
+
 import { 
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -95,52 +254,53 @@ import {
 } from 'firebase/auth';
 import { auth } from '../../../firebase/config/firebaseConfig';
 import { userRepository } from './repositories/UserRepository';
-import { User, UserRole } from '../types/domain/core/user';
-import { gymRepository } from './repositories/GymRepository'; // We'll create this tomorrow
+import { User, UserRole, UserRegistrationData } from '../types/domain/core/user';
+// Add this import at the top of AuthService.ts
+import { useGymStore } from '../../features/gym/stores/useGymStore';
+import { useAppStore } from '../../shared/stores/useAppStore';
 
 export class AuthService {
-  async signUp(
-    email: string, 
-    password: string, 
-    name: string,
-    role: UserRole = 'member',
-    phoneNumber?: string
-  ): Promise<User> {
+  async signUp(registrationData: UserRegistrationData): Promise<User> {
     try {
-      // Create Firebase auth user
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const { email, password, name, role, phoneNumber } = registrationData;
       
-      // Update profile with name
+      // 1. Create Firebase auth user
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const firebaseUid = userCredential.user.uid;
+      
+      // 2. Update profile with name
       await updateProfile(userCredential.user, {
         displayName: name
       });
-
-      // Create user document in Firestore with role
+  
+      // 3. Create user document in Firestore with UID as document ID
       const userData: Omit<User, 'id'> = {
-        uid: userCredential.user.uid,
+        uid: firebaseUid, // Store Firebase UID as a field
         email,
         displayName: name,
-        role, // ADDED: role field
-        phoneNumber, // ADDED: phone number
+        role: role || 'fitness_user', // Default to fitness_user
+        phoneNumber,
+        
+        // Initialize empty gym memberships
+        gymMemberships: [],
+        // currentGymId will be undefined initially
+        
+        // Timestamps
         createdAt: new Date(),
         updatedAt: new Date(),
         lastActive: new Date()
       };
-
-      const userId = await userRepository.create(userData);
-
-      // If user is a gym owner, create a default gym profile
-      if (role === 'gym_owner') {
-        // We'll create gymRepository tomorrow
-        // For now, just log that we need to create a gym
-        console.log('Gym owner registered - gym creation will be handled in next phase');
-      }
-
+  
+      // ✅ FIXED: Use UID as document ID (Industry Standard)
+      const documentId = await userRepository.createUserWithUid(userData);
+      console.log(`✅ User created with ID (UID): ${documentId}`);
+  
+      // ✅ Return user with both id and uid fields
       return {
+        id: firebaseUid, // Document ID = Firebase UID
         ...userData,
-        id: userId,
-      };
-
+      } as User;
+  
     } catch (error) {
       console.error('Sign up error:', error);
       throw error;
@@ -159,8 +319,9 @@ export class AuthService {
       }
 
       // Update last active timestamp
-      await userRepository.update(user.id!, {
-        lastActive: new Date()
+      await userRepository.update(user.id, { // ✅ Use user.id (which equals uid)
+        lastActive: new Date(),
+        updatedAt: new Date()
       });
 
       return user;
@@ -174,6 +335,17 @@ export class AuthService {
   async signOut(): Promise<void> {
     try {
       await signOut(auth);
+
+      // 🚨 CRITICAL: Clear ALL stores on logout
+      // 1. Clear app store
+      const { clearAll } = useAppStore.getState();
+      clearAll();
+      
+      // 2. Clear gym store
+      const { resetStore } = useGymStore.getState();
+      resetStore();
+      
+      console.log('✅ User signed out and all stores cleared');
     } catch (error) {
       console.error('Sign out error:', error);
       throw error;
@@ -188,19 +360,28 @@ export class AuthService {
     return auth.onAuthStateChanged(callback);
   }
 
-  // Helper method to check user role - ADDED
-  getUserRole(user: User | null): UserRole {
-    return user?.role || 'member';
+  // Check if user has any gym memberships
+  hasGymAccess(user: User | null): boolean {
+    if (!user) return false;
+    return (user.gymMemberships?.length || 0) > 0;
   }
 
-  // Helper method to check if user is gym owner - ADDED
-  isGymOwner(user: User | null): boolean {
-    return user?.role === 'gym_owner';
+  // Check if user is a pure fitness user (no gyms)
+  isPureFitnessUser(user: User | null): boolean {
+    if (!user) return false;
+    return user.role === 'fitness_user' && (user.gymMemberships?.length || 0) === 0;
   }
 
-  // Helper method to check if user is gym staff - ADDED
-  isGymStaff(user: User | null): boolean {
-    return user?.role === 'gym_staff' || user?.role === 'gym_trainer';
+  // Check if user is owner of any gym
+  isAnyGymOwner(user: User | null): boolean {
+    if (!user) return false;
+    return user.gymMemberships?.some(m => m.gymRole === 'owner') || false;
+  }
+
+  // Check if user is staff/trainer of any gym
+  isAnyGymStaff(user: User | null): boolean {
+    if (!user) return false;
+    return user.gymMemberships?.some(m => ['staff', 'trainer'].includes(m.gymRole)) || false;
   }
 }
 

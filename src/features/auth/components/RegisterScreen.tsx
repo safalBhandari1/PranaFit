@@ -1,3 +1,4 @@
+
 // import React, { useState } from 'react';
 // import {
 //   View,
@@ -6,13 +7,16 @@
 //   Alert,
 //   ScrollView,
 //   KeyboardAvoidingView,
-//   Platform
+//   Platform,
+//   StyleSheet
 // } from 'react-native';
 // import { useNavigation } from '@react-navigation/native';
 // import { useThemeStore } from '../../../shared/stores/useThemeStore';
 // import { useAppStore } from '../../../shared/stores/useAppStore';
 // import { authService } from '../../../shared/services/AuthService';
 // import { ThemeText } from '../../../shared/ui/ThemeText';
+// import { ThemeButton } from '../../../shared/ui/ThemeButton';
+// import { ThemeView } from '../../../shared/ui/ThemeView';
 // import { createAuthStyles } from '../styles/authStyles';
 
 // export const RegisterScreen: React.FC = () => {
@@ -20,6 +24,8 @@
 //   const [email, setEmail] = useState('');
 //   const [password, setPassword] = useState('');
 //   const [confirmPassword, setConfirmPassword] = useState('');
+//   const [phoneNumber, setPhoneNumber] = useState('');
+//   const [userType, setUserType] = useState<'member' | 'gym_owner'>('member'); // ADDED: user type state
 //   const [loading, setLoading] = useState(false);
 //   const navigation = useNavigation();
 //   const { theme } = useThemeStore();
@@ -28,8 +34,9 @@
 //   const styles = createAuthStyles(theme);
 
 //   const handleRegister = async () => {
+//     // Validation
 //     if (!name || !email || !password || !confirmPassword) {
-//       Alert.alert('Error', 'Please fill in all fields');
+//       Alert.alert('Error', 'Please fill in all required fields');
 //       return;
 //     }
 
@@ -48,14 +55,29 @@
 //       return;
 //     }
 
+//     // Phone validation for gym owners
+//     if (userType === 'gym_owner' && !phoneNumber) {
+//       Alert.alert('Error', 'Phone number is required for gym owners');
+//       return;
+//     }
+
 //     setLoading(true);
 //     setAppLoading(true);
 
 //     try {
-//       const user = await authService.signUp(email, password, name);
+//       const user = await authService.signUp(email, password, name, userType, phoneNumber);
 //       setUser(user);
 //       setAuthentication(true);
-//       Alert.alert('Success', 'Account created successfully! Welcome to Prana! 🎉');
+      
+//       // Show different success messages based on user type
+//       if (userType === 'gym_owner') {
+//         Alert.alert(
+//           'Welcome Gym Owner! 🏋️‍♂️',
+//           'Your gym owner account has been created successfully! Next, set up your gym profile.'
+//         );
+//       } else {
+//         Alert.alert('Success', 'Account created successfully! Welcome to PranaFit! 🎉');
+//       }
 //     } catch (error: any) {
 //       let errorMessage = 'Registration failed. Please try again.';
       
@@ -80,23 +102,70 @@
 //     navigation.navigate('Login' as never);
 //   };
 
-//   const isFormValid = name && email && password && confirmPassword;
+//   const isFormValid = name && email && password && confirmPassword && 
+//     (userType === 'member' || (userType === 'gym_owner' && phoneNumber));
 
 //   return (
 //     <KeyboardAvoidingView 
 //       style={styles.container}
 //       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
 //     >
-//       <ScrollView contentContainerStyle={styles.scrollContent}>
+//       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 //         <View style={styles.formContainer}>
 //           {/* Header */}
 //           <View style={styles.header}>
 //             <ThemeText variant="h1" style={{ marginBottom: 10, color: theme.colors.primary }}>
-//               Join Prana
+//               Join PranaFit
 //             </ThemeText>
 //             <ThemeText variant="body" style={{ textAlign: 'center', color: theme.colors.text.secondary }}>
 //               Start your fitness journey today
 //             </ThemeText>
+//           </View>
+
+//           {/* User Type Selection - ADDED */}
+//           <View style={localStyles.userTypeContainer}>
+//             <ThemeText variant="body" style={{ marginBottom: 12, color: theme.colors.text.primary }}>
+//               I want to join as:
+//             </ThemeText>
+//             <View style={localStyles.userTypeButtons}>
+//               <TouchableOpacity
+//                 style={[
+//                   localStyles.userTypeButton,
+//                   userType === 'member' && localStyles.userTypeButtonActive,
+//                   { borderColor: theme.colors.primary }
+//                 ]}
+//                 onPress={() => setUserType('member')}
+//               >
+//                 <ThemeText 
+//                   style={[
+//                     localStyles.userTypeButtonText,
+//                     userType === 'member' && localStyles.userTypeButtonTextActive,
+//                     { color: userType === 'member' ? '#FFFFFF' : theme.colors.primary }
+//                   ]}
+//                 >
+//                   👤 Member
+//                 </ThemeText>
+//               </TouchableOpacity>
+              
+//               <TouchableOpacity
+//                 style={[
+//                   localStyles.userTypeButton,
+//                   userType === 'gym_owner' && localStyles.userTypeButtonActive,
+//                   { borderColor: theme.colors.primary }
+//                 ]}
+//                 onPress={() => setUserType('gym_owner')}
+//               >
+//                 <ThemeText 
+//                   style={[
+//                     localStyles.userTypeButtonText,
+//                     userType === 'gym_owner' && localStyles.userTypeButtonTextActive,
+//                     { color: userType === 'gym_owner' ? '#FFFFFF' : theme.colors.primary }
+//                   ]}
+//                 >
+//                   🏋️‍♂️ Gym Owner
+//                 </ThemeText>
+//               </TouchableOpacity>
+//             </View>
 //           </View>
 
 //           {/* Form */}
@@ -119,6 +188,18 @@
 //             keyboardType="email-address"
 //             autoComplete="email"
 //           />
+          
+//           {userType === 'gym_owner' && (
+//             <TextInput
+//               style={styles.input}
+//               placeholder="Phone Number"
+//               placeholderTextColor={theme.colors.text.secondary}
+//               value={phoneNumber}
+//               onChangeText={setPhoneNumber}
+//               keyboardType="phone-pad"
+//               autoComplete="tel"
+//             />
+//           )}
           
 //           <TextInput
 //             style={styles.input}
@@ -150,7 +231,8 @@
 //             disabled={!isFormValid || loading}
 //           >
 //             <ThemeText style={styles.buttonText}>
-//               {loading ? 'Creating Account...' : 'Create Account'}
+//               {loading ? 'Creating Account...' : 
+//                 userType === 'gym_owner' ? 'Create Gym Owner Account' : 'Create Member Account'}
 //             </ThemeText>
 //           </TouchableOpacity>
 
@@ -166,6 +248,36 @@
 //     </KeyboardAvoidingView>
 //   );
 // };
+
+// // Local styles for user type selection
+// const localStyles = StyleSheet.create({
+//   userTypeContainer: {
+//     marginBottom: 24,
+//   },
+//   userTypeButtons: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-between',
+//     gap: 12,
+//   },
+//   userTypeButton: {
+//     flex: 1,
+//     paddingVertical: 14,
+//     borderRadius: 12,
+//     borderWidth: 2,
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//   },
+//   userTypeButtonActive: {
+//     backgroundColor: '#3B82F6',
+//   },
+//   userTypeButtonText: {
+//     fontSize: 16,
+//     fontWeight: '600',
+//   },
+//   userTypeButtonTextActive: {
+//     color: '#FFFFFF',
+//   },
+// });
 
 import React, { useState } from 'react';
 import {
@@ -193,7 +305,7 @@ export const RegisterScreen: React.FC = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [userType, setUserType] = useState<'member' | 'gym_owner'>('member'); // ADDED: user type state
+  const [userType, setUserType] = useState<'member' | 'gym_owner'>('member');
   const [loading, setLoading] = useState(false);
   const navigation = useNavigation();
   const { theme } = useThemeStore();
@@ -233,7 +345,15 @@ export const RegisterScreen: React.FC = () => {
     setAppLoading(true);
 
     try {
-      const user = await authService.signUp(email, password, name, userType, phoneNumber);
+      // ✅ FIXED: Pass object instead of individual parameters
+      const user = await authService.signUp({
+        email,
+        password,
+        name,
+        role: userType === 'member' ? 'fitness_user' : 'gym_owner',
+        phoneNumber: userType === 'gym_owner' ? phoneNumber : undefined
+      });
+      
       setUser(user);
       setAuthentication(true);
       
@@ -257,8 +377,11 @@ export const RegisterScreen: React.FC = () => {
         errorMessage = 'Password is too weak.';
       } else if (error.code === 'auth/network-request-failed') {
         errorMessage = 'Network error. Please check your connection.';
+      } else if (error.code === 'auth/admin-restricted-operation') {
+        errorMessage = 'Authentication temporarily restricted. Please try again in a few minutes or contact support.';
       }
       
+      console.error('Registration error details:', error);
       Alert.alert('Registration Failed', errorMessage);
     } finally {
       setLoading(false);
@@ -290,7 +413,7 @@ export const RegisterScreen: React.FC = () => {
             </ThemeText>
           </View>
 
-          {/* User Type Selection - ADDED */}
+          {/* User Type Selection */}
           <View style={localStyles.userTypeContainer}>
             <ThemeText variant="body" style={{ marginBottom: 12, color: theme.colors.text.primary }}>
               I want to join as:
