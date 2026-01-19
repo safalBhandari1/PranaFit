@@ -20,10 +20,9 @@ import {
       super('gym_members');
     }
   
-    /**
-     * Create a new gym member - Following create pattern with auto code generation
-     */
-    // In GymMemberRepository.ts - Simplify createMember
+    // UPDATE: src/shared/services/repositories/GymMemberRepository.ts
+    // In the createMember method, update to include new fields:
+
     async createMember(memberData: CreateGymMemberDTO): Promise<string> {
         try {
         // Generate member code if not provided
@@ -34,29 +33,53 @@ import {
         }
         
         const memberToCreate: Omit<GymMember, 'id'> & { uid?: string } = {
+            // Basic info
             gymId: memberData.gymId,
             userId: memberData.userId,
             memberCode,
             status: 'active' as MemberStatus,
+            
+            // Personal information (NEW)
+            firstName: memberData.firstName,
+            lastName: memberData.lastName,
+            phoneNumber: memberData.phoneNumber,
+            email: memberData.email,
+            address: memberData.address,
+            dateOfBirth: memberData.dateOfBirth,
+            socialMedia: memberData.socialMedia,
+            
+            // Emergency Contact (REQUIRED)
+            emergencyContact: memberData.emergencyContact,
+            
+            // Membership
             joinDate: memberData.joinDate || new Date(),
             autoRenew: true,
+            
+            // Payment tracking
             totalPaid: 0,
             paymentStatus: 'pending' as PaymentStatus,
+            
+            // Attendance
             totalCheckins: 0,
             averageWeeklyVisits: 0,
-            notes: memberData.notes || '',
+            
+            // Additional info
+            notes: memberData.notes,
+            healthNotes: memberData.healthNotes,
+            
+            // Timestamps
             createdAt: new Date(),
             updatedAt: new Date(),
-            // currentPackage is NOT set here - it will be set via separate method
         };
-    
+        
         return await this.create(memberToCreate);
         } catch (error: any) {
         console.error('❌ Error creating gym member:', error);
         throw handleFirebaseError(error);
         }
     }
-    
+
+
     // Add new method to assign package
     async assignPackageToMember(
         memberId: string, 
@@ -76,6 +99,79 @@ import {
         updatedAt: new Date()
         });
     }
+
+    /**
+     * Assign or renew package for member with enhanced logic
+     */
+    async assignOrRenewPackage(
+        memberId: string,
+        gymPackage: GymPackage,
+        startDate: Date,
+        isRenewal: boolean = false
+    ): Promise<void> {
+        try {
+        const member = await this.getById(memberId);
+        if (!member) {
+            throw new Error('Member not found');
+        }
+    
+        let newExpiryDate: Date;
+        let shouldUpdatePackage = true;
+    
+        // Check if this is the same package for renewal
+        const isSamePackage = member.currentPackage?.id === gymPackage.id;
+    
+        if (isRenewal && member.currentPackage && member.expiryDate && isSamePackage) {
+            // RENEWAL: Extend from current expiry or start date (whichever is later)
+            const baseDate = member.expiryDate > startDate ? member.expiryDate : startDate;
+            newExpiryDate = new Date(baseDate);
+            newExpiryDate.setDate(newExpiryDate.getDate() + gymPackage.durationDays);
+            console.log(`🔄 Renewing package: ${gymPackage.name}, new expiry: ${newExpiryDate.toDateString()}`);
+        } else if (member.currentPackage && !isSamePackage) {
+            // PACKAGE CHANGE: Start fresh from start date
+            newExpiryDate = new Date(startDate);
+            newExpiryDate.setDate(newExpiryDate.getDate() + gymPackage.durationDays);
+            console.log(`🔄 Changing package: ${member.currentPackage.name} → ${gymPackage.name}`);
+        } else {
+            // NEW ASSIGNMENT: No current package
+            newExpiryDate = new Date(startDate);
+            newExpiryDate.setDate(newExpiryDate.getDate() + gymPackage.durationDays);
+            console.log(`🔄 Assigning new package: ${gymPackage.name}`);
+        }
+    
+        // Prepare update data
+        const updateData: any = {
+            currentPackage: gymPackage,
+            expiryDate: newExpiryDate,
+            lastPaymentDate: startDate,
+            nextPaymentDate: newExpiryDate,
+            paymentStatus: 'completed',
+            updatedAt: new Date()
+        };
+    
+        // Update member
+        await this.update(memberId, updateData);
+        console.log(`✅ Package ${gymPackage.name} assigned to member ${memberId}`);
+    
+        } catch (error: any) {
+        console.error('❌ Error assigning/renewing package:', error);
+        throw handleFirebaseError(error);
+        }
+    }
+    
+    /**
+     * Check if member already has a specific package
+     */
+    async hasPackage(memberId: string, packageId: string): Promise<boolean> {
+        try {
+        const member = await this.getById(memberId);
+        return member?.currentPackage?.id === packageId;
+        } catch (error) {
+        console.error('❌ Error checking member package:', error);
+        return false;
+        }
+    }
+  
   
     /**
      * Get members by gym - Following getUsersByGym pattern

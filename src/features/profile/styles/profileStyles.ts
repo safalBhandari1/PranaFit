@@ -100,4 +100,11 @@ export const createProfileStyles = (theme: any) => StyleSheet.create({
     color: theme.colors.text.secondary,
     marginTop: 4,
   },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: theme.spacing.md,
+    paddingHorizontal: theme.spacing.md,
+  },
 });
