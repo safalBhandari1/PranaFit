@@ -232,50 +232,298 @@ export const useGymStore = create<GymStore>((set, get) => ({
   /**
    * Update gym
    */
-  updateGym: async (gymId: string, updateData: UpdateGymDTO) => {
+//   updateGym: async (gymId: string, updateData: UpdateGymDTO) => {
+//     set({ isLoading: true, error: null });
+//     try {
+//       // 1. Fetch the current, complete object from the database
+//       const currentGym = await gymRepository.getById(gymId);
+//       if (!currentGym) {
+//         throw new UserFriendlyError('Gym not found', 'The gym does not exist.', 'GYM_NOT_FOUND', false);
+//       }
+      
+//       // 2. Handle settings merge FIRST
+//       let mergedSettings: GymSettings | undefined;
+//       if (updateData.settings) {
+//         mergedSettings = {
+//           ...currentGym.settings,
+//           ...updateData.settings
+//         };
+//       }
+      
+//       // 3. Create the update object WITHOUT spreading updateData.settings
+//       const { settings: _, packages: __, ...otherUpdateData } = updateData;
+      
+//       const mergedUpdateData: Partial<Gym> = {
+//         ...otherUpdateData,
+//         packages: undefined
+//       };
+      
+//       // 4. Add merged settings if they exist
+//       if (mergedSettings) {
+//         mergedUpdateData.settings = mergedSettings;
+//       }
+      
+//       // 5. Save the merged, complete object back to the database
+//       await gymRepository.update(gymId, mergedUpdateData);
+      
+//       // 6. Refresh current gym in store
+//       const { currentGym: storeGym } = get();
+//       if (storeGym?.id === gymId) {
+//         const updatedGym = await gymRepository.getById(gymId);
+//         set({ currentGym: updatedGym });
+//       }
+      
+//       set({ isLoading: false });
+//     } catch (error: any) {
+//       console.error('❌ Error updating gym:', error);
+//       set({ 
+//         error: error.message || 'Failed to update gym',
+//         isLoading: false 
+//       });
+//       throw handleFirebaseError(error);
+//     }
+//   },
+
+/**
+ * Update gym - SIMPLIFIED VERSION
+ */
+/**
+ * Update gym - CLEANER VERSION
+ */
+// updateGym: async (gymId: string, updateData: UpdateGymDTO) => {
+//     set({ isLoading: true, error: null });
+//     try {
+//       console.log('🔄 UPDATE GYM STARTED:');
+//       console.log('- Gym ID:', gymId);
+//       console.log('- Update data keys:', Object.keys(updateData));
+//       console.log('- Has packages field?', 'packages' in updateData);
+//       console.log('- Packages value:', updateData.packages);
+//       console.log('- Package count:', updateData.packages?.length || 0);
+//       console.log('- Is packages array?', Array.isArray(updateData.packages));
+      
+//       // TEMPORARY DEBUG - Deep inspection
+//       console.log('🔍 TEMP DEBUG - updateData object:', JSON.stringify(updateData, null, 2));
+      
+//       // Get current gym first
+//       const currentGym = await gymRepository.getById(gymId);
+//       if (!currentGym) {
+//         throw new UserFriendlyError('Gym not found', 'The gym does not exist.', 'GYM_NOT_FOUND', false);
+//       }
+  
+//       // ✅ CRITICAL: Handle packages FIRST - with extensive logging
+//       if (updateData.packages && updateData.packages.length > 0) {
+//         console.log('📦 CALLING updateGymPackages...');
+//         console.log('📦 Packages details:', updateData.packages.map((p, i) => ({
+//           index: i,
+//           name: p.name,
+//           price: p.price,
+//           id: p.id,
+//           hasId: !!p.id,
+//           isActive: p.isActive
+//         })));
+        
+//         // Force update regardless - temporary for debugging
+//         console.log('📦 FORCE CALLING gymService.updateGymPackages');
+//         try {
+//           await gymService.updateGymPackages(gymId, updateData.packages);
+//           console.log('✅ updateGymPackages completed successfully');
+//         } catch (packagesError) {
+//           console.error('❌ updateGymPackages failed:', packagesError);
+//           throw packagesError;
+//         }
+//       } else {
+//         console.log('⚠️ NO PACKAGES TO UPDATE - packages is:', updateData.packages);
+//         console.log('⚠️ Type of packages:', typeof updateData.packages);
+//         console.log('⚠️ Is null?', updateData.packages === null);
+//         console.log('⚠️ Is undefined?', updateData.packages === undefined);
+//         console.log('⚠️ Length if array:', updateData.packages?.length);
+//       }
+      
+//       // Prepare the update object for other fields
+//       const updateObject: Partial<Gym> = {};
+      
+//       // Copy simple fields
+//       if (updateData.name !== undefined) updateObject.name = updateData.name;
+//       if (updateData.contactPhone !== undefined) updateObject.contactPhone = updateData.contactPhone;
+//       if (updateData.contactEmail !== undefined) updateObject.contactEmail = updateData.contactEmail;
+//       if (updateData.description !== undefined) updateObject.description = updateData.description;
+//       if (updateData.website !== undefined) updateObject.website = updateData.website;
+//       if (updateData.logoUrl !== undefined) updateObject.logoUrl = updateData.logoUrl;
+//       if (updateData.coverImageUrl !== undefined) updateObject.coverImageUrl = updateData.coverImageUrl;
+//       if (updateData.status !== undefined) updateObject.status = updateData.status;
+//       if (updateData.owners !== undefined) updateObject.owners = updateData.owners;
+      
+//       // Handle address (if provided)
+//       if (updateData.address) {
+//         updateObject.address = {
+//           ...currentGym.address,
+//           ...updateData.address
+//         };
+//       }
+      
+//       // Handle business hours (if provided)
+//       if (updateData.businessHours) {
+//         updateObject.businessHours = {
+//           ...currentGym.businessHours,
+//           ...updateData.businessHours
+//         };
+//         console.log('🕒 Business hours updated:', updateObject.businessHours);
+//       }
+      
+//       // Handle settings (if provided) - ensure it's complete
+//       if (updateData.settings) {
+//         updateObject.settings = {
+//           ...currentGym.settings,
+//           ...updateData.settings
+//         };
+//       }
+      
+//       // Update other fields (if any)
+//       if (Object.keys(updateObject).length > 0) {
+//         updateObject.updatedAt = new Date();
+//         console.log('📝 Updating gym fields:', Object.keys(updateObject));
+//         await gymRepository.update(gymId, updateObject);
+//       } else {
+//         console.log('📝 No other fields to update');
+//       }
+      
+//       // Refresh current gym in store
+//       const updatedGym = await gymRepository.getById(gymId);
+//       set({ 
+//         currentGym: updatedGym,
+//         isLoading: false 
+//       });
+      
+//       console.log('✅ Gym update COMPLETE:', updatedGym?.name);
+//       console.log('✅ New packages count:', updatedGym?.packages?.length);
+//       console.log('✅ New package prices:', updatedGym?.packages?.map(p => ({ name: p.name, price: p.price })));
+      
+//     } catch (error: any) {
+//       console.error('❌ ERROR in updateGym:', error);
+//       console.error('❌ Error stack:', error.stack);
+//       set({ 
+//         error: error.message || 'Failed to update gym',
+//         isLoading: false 
+//       });
+//       throw handleFirebaseError(error);
+//     }
+//   },
+updateGym: async (gymId: string, updateData: UpdateGymDTO) => {
     set({ isLoading: true, error: null });
     try {
-      // 1. Fetch the current, complete object from the database
+      console.log('🔄 UPDATE GYM STARTED:');
+      console.log('- Gym ID:', gymId);
+      console.log('- Update data keys:', Object.keys(updateData));
+      console.log('- Has packages field?', 'packages' in updateData);
+      console.log('- Package count:', updateData.packages?.length || 0);
+      console.log('- Is packages array?', Array.isArray(updateData.packages));
+      
+      // TEMPORARY DEBUG - Deep inspection
+      console.log('🔍 TEMP DEBUG - First package:', updateData.packages?.[0]);
+      
+      // Get current gym first
       const currentGym = await gymRepository.getById(gymId);
       if (!currentGym) {
         throw new UserFriendlyError('Gym not found', 'The gym does not exist.', 'GYM_NOT_FOUND', false);
       }
+  
+      // ✅ CRITICAL: Handle packages FIRST - with extensive logging
+      if (updateData.packages && updateData.packages.length > 0) {
+        console.log('📦 CALLING updateGymPackages...');
+        
+        // Type-safe way to check package details
+        console.log('📦 Packages details:', updateData.packages.map((p, i) => {
+          // Since p is Omit<GymPackage, 'id' | 'createdAt'>, we can't access p.id
+          const packageWithAnyType = p as any; // Temporary workaround
+          return {
+            index: i,
+            name: p.name,
+            price: p.price,
+            hasId: 'id' in p, // Check if id property exists
+            id: 'id' in p ? (p as any).id : 'NO_ID', // Safe access
+            isActive: p.isActive
+          };
+        }));
+        
+        // Force update regardless - temporary for debugging
+        console.log('📦 FORCE CALLING gymService.updateGymPackages');
+        try {
+          await gymService.updateGymPackages(gymId, updateData.packages);
+          console.log('✅ updateGymPackages completed successfully');
+        } catch (packagesError) {
+          console.error('❌ updateGymPackages failed:', packagesError);
+          throw packagesError;
+        }
+      } else {
+        console.log('⚠️ NO PACKAGES TO UPDATE - packages is:', updateData.packages);
+        console.log('⚠️ Type of packages:', typeof updateData.packages);
+        console.log('⚠️ Is null?', updateData.packages === null);
+        console.log('⚠️ Is undefined?', updateData.packages === undefined);
+        console.log('⚠️ Length if array:', updateData.packages?.length);
+      }
       
-      // 2. Handle settings merge FIRST
-      let mergedSettings: GymSettings | undefined;
+      // Prepare the update object for other fields
+      const updateObject: Partial<Gym> = {};
+      
+      // Copy simple fields
+      if (updateData.name !== undefined) updateObject.name = updateData.name;
+      if (updateData.contactPhone !== undefined) updateObject.contactPhone = updateData.contactPhone;
+      if (updateData.contactEmail !== undefined) updateObject.contactEmail = updateData.contactEmail;
+      if (updateData.description !== undefined) updateObject.description = updateData.description;
+      if (updateData.website !== undefined) updateObject.website = updateData.website;
+      if (updateData.logoUrl !== undefined) updateObject.logoUrl = updateData.logoUrl;
+      if (updateData.coverImageUrl !== undefined) updateObject.coverImageUrl = updateData.coverImageUrl;
+      if (updateData.status !== undefined) updateObject.status = updateData.status;
+      if (updateData.owners !== undefined) updateObject.owners = updateData.owners;
+      
+      // Handle address (if provided)
+      if (updateData.address) {
+        updateObject.address = {
+          ...currentGym.address,
+          ...updateData.address
+        };
+      }
+      
+      // Handle business hours (if provided)
+      if (updateData.businessHours) {
+        updateObject.businessHours = {
+          ...currentGym.businessHours,
+          ...updateData.businessHours
+        };
+        console.log('🕒 Business hours updated:', updateObject.businessHours);
+      }
+      
+      // Handle settings (if provided) - ensure it's complete
       if (updateData.settings) {
-        mergedSettings = {
+        updateObject.settings = {
           ...currentGym.settings,
           ...updateData.settings
         };
       }
       
-      // 3. Create the update object WITHOUT spreading updateData.settings
-      const { settings: _, packages: __, ...otherUpdateData } = updateData;
-      
-      const mergedUpdateData: Partial<Gym> = {
-        ...otherUpdateData,
-        packages: undefined
-      };
-      
-      // 4. Add merged settings if they exist
-      if (mergedSettings) {
-        mergedUpdateData.settings = mergedSettings;
+      // Update other fields (if any)
+      if (Object.keys(updateObject).length > 0) {
+        updateObject.updatedAt = new Date();
+        console.log('📝 Updating gym fields:', Object.keys(updateObject));
+        await gymRepository.update(gymId, updateObject);
+      } else {
+        console.log('📝 No other fields to update');
       }
       
-      // 5. Save the merged, complete object back to the database
-      await gymRepository.update(gymId, mergedUpdateData);
+      // Refresh current gym in store
+      const updatedGym = await gymRepository.getById(gymId);
+      set({ 
+        currentGym: updatedGym,
+        isLoading: false 
+      });
       
-      // 6. Refresh current gym in store
-      const { currentGym: storeGym } = get();
-      if (storeGym?.id === gymId) {
-        const updatedGym = await gymRepository.getById(gymId);
-        set({ currentGym: updatedGym });
-      }
+      console.log('✅ Gym update COMPLETE:', updatedGym?.name);
+      console.log('✅ New packages count:', updatedGym?.packages?.length);
+      console.log('✅ New package prices:', updatedGym?.packages?.map(p => ({ name: p.name, price: p.price })));
       
-      set({ isLoading: false });
     } catch (error: any) {
-      console.error('❌ Error updating gym:', error);
+      console.error('❌ ERROR in updateGym:', error);
+      console.error('❌ Error stack:', error.stack);
       set({ 
         error: error.message || 'Failed to update gym',
         isLoading: false 
@@ -283,7 +531,6 @@ export const useGymStore = create<GymStore>((set, get) => ({
       throw handleFirebaseError(error);
     }
   },
-  
   clearCurrentGym: () => {
     set({ 
       currentGym: null,

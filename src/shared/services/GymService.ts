@@ -1,4 +1,4 @@
-import { Gym, CreateGymDTO, UpdateGymDTO, GymMember, CreateGymMemberDTO, UpdateGymMemberDTO, MemberStatus } from '../types/domain/core/gym';
+import { Gym, CreateGymDTO, UpdateGymDTO, GymMember, CreateGymMemberDTO, UpdateGymMemberDTO, MemberStatus, GymPackage } from '../types/domain/core/gym';
 import { User } from '../types/domain/core/user';
 import { gymRepository } from './repositories/GymRepository';
 import { userRepository } from './repositories/UserRepository';
@@ -907,138 +907,186 @@ async getMembersByGym(
       );
     }
   }
-  /**
- * Create member from invitation WITH USER-PROVIDED DATA
- * Called when user accepts a member invitation and provides their information
- */
-// async createMemberFromInvitation(
-//     invitation: GymInvitation,
-//     userId: string,
-//     memberData: MemberData // ✅ NEW: User-provided data from form
-//   ): Promise<GymMember> {
-//     try {
-//       console.log('🎯 Creating member from invitation with USER-PROVIDED data:', { 
-//         invitationId: invitation.id, 
-//         userId,
-//         hasMemberData: !!memberData 
-//       });
-      
-//       if (!memberData) {
-//         throw new UserFriendlyError(
-//           'Missing member data',
-//           'Member data is required to join as a member',
-//           'MEMBER_DATA_MISSING',
-//           false
-//         );
-//       }
-      
-//       // Validate emergency contact
-//       const emergencyValidation = validateEmergencyContact(memberData.emergencyContact);
-//       if (!emergencyValidation.isValid) {
-//         throw new UserFriendlyError(
-//           'Invalid emergency contact',
-//           emergencyValidation.errors.join(', '),
-//           'INVALID_EMERGENCY_CONTACT',
-//           false
-//         );
-//       }
-      
-//       const gym = await gymRepository.getById(invitation.gymId);
-//       if (!gym) {
-//         throw new UserFriendlyError(
-//           'Gym not found',
-//           'The gym no longer exists',
-//           'GYM_NOT_FOUND',
-//           false
-//         );
-//       }
-      
-//       const user = await userRepository.getById(userId);
-//       if (!user) {
-//         throw new UserFriendlyError(
-//           'User not found',
-//           'The user no longer exists',
-//           'USER_NOT_FOUND',
-//           false
-//         );
-//       }
-      
-//       // Generate member code
-//       const memberCode = `M${gym.slug.toUpperCase()}_${(gym.totalMembers + 1).toString().padStart(3, '0')}`;
-      
-//       // Create gym member document with USER-PROVIDED data
-//       const memberId = await gymMemberRepository.createMember({
-//         gymId: invitation.gymId,
-//         userId: userId,
-//         memberCode,
-//         firstName: memberData.firstName,
-//         lastName: memberData.lastName,
-//         phoneNumber: memberData.phoneNumber,
-//         email: memberData.email,
-//         address: memberData.address,
-//         dateOfBirth: memberData.dateOfBirth,
-//         socialMedia: memberData.socialMedia,
-//         emergencyContact: memberData.emergencyContact,
-//         joinDate: new Date(),
-//         notes: memberData.notes,
-//         healthNotes: memberData.healthNotes,
-//       });
-      
-//       // Get the created member
-//       const gymMember = await gymMemberRepository.getById(memberId);
-//       if (!gymMember) {
-//         throw new UserFriendlyError(
-//           'Member creation failed',
-//           'Failed to retrieve created member',
-//           'MEMBER_CREATION_FAILED',
-//           false
-//         );
-//       }
-      
-//       // Update user's gym membership WITH memberId
-//       const updatedMemberships = [
-//         ...(user.gymMemberships || []),
-//         {
-//           gymId: invitation.gymId,
-//           gymRole: 'member' as const,
-//           memberId: memberId, // ✅ Store the memberId reference
-//           joinedAt: new Date(),
-//           isActive: true,
-//         }
-//       ];
-      
-//       await userRepository.update(userId, {
-//         gymMemberships: updatedMemberships,
-//         // Set as current gym if user doesn't have one
-//         currentGymId: user.currentGymId || invitation.gymId,
-//         updatedAt: new Date()
-//       });
-      
-//       // Update gym's members array WITH memberId (not userId!)
-//       await gymRepository.update(invitation.gymId, {
-//         members: [...gym.members, memberId], // ✅ Store memberId, not userId
-//         totalMembers: (gym.totalMembers || 0) + 1,
-//         activeMembers: (gym.activeMembers || 0) + 1,
-//         updatedAt: new Date()
-//       });
-      
-//       console.log(`✅ Created member ${memberCode} from invitation with USER-PROVIDED data`);
-//       return gymMember;
-      
-//     } catch (error: any) {
-//       console.error('❌ Error creating member from invitation:', error);
-//       if (error instanceof UserFriendlyError) {
-//         throw error;
-//       }
-//       throw new UserFriendlyError(
-//         'Failed to create member',
-//         error.message || 'Please try again',
-//         'CREATE_MEMBER_ERROR',
-//         true
-//       );
-//     }
-//   }
 
+  /**
+ * Add new package to gym
+ */
+async addGymPackage(gymId: string, packageData: Omit<GymPackage, 'id' | 'createdAt'>): Promise<{ packageId: string; gymPackage: GymPackage }> {
+    try {
+      const gym = await gymRepository.getById(gymId);
+      if (!gym) {
+        throw new UserFriendlyError('Gym not found', 'The specified gym does not exist', 'GYM_NOT_FOUND', false);
+      }
+  
+      const newPackage: GymPackage = {
+        ...packageData,
+        id: `pkg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        createdAt: new Date()
+      };
+  
+      const updatedPackages = [...gym.packages, newPackage];
+      
+      await gymRepository.update(gymId, {
+        packages: updatedPackages,
+        updatedAt: new Date()
+      });
+  
+      console.log(`✅ Package "${newPackage.name}" added to gym ${gym.name}`);
+      return { packageId: newPackage.id, gymPackage: newPackage };
+    } catch (error: any) {
+      console.error('❌ Error adding gym package:', error);
+      if (error instanceof UserFriendlyError) throw error;
+      throw new UserFriendlyError(
+        'Failed to add package',
+        error.message || 'Please try again',
+        'ADD_PACKAGE_ERROR',
+        true
+      );
+    }
+  }
+  
+  /**
+   * Update existing package
+   */
+  async updateGymPackage(gymId: string, packageId: string, updateData: Partial<Omit<GymPackage, 'id' | 'createdAt'>>): Promise<void> {
+    try {
+      const gym = await gymRepository.getById(gymId);
+      if (!gym) {
+        throw new UserFriendlyError('Gym not found', 'The specified gym does not exist', 'GYM_NOT_FOUND', false);
+      }
+  
+      const packageIndex = gym.packages.findIndex(pkg => pkg.id === packageId);
+      if (packageIndex === -1) {
+        throw new UserFriendlyError('Package not found', 'The specified package does not exist', 'PACKAGE_NOT_FOUND', false);
+      }
+  
+      const updatedPackages = [...gym.packages];
+      updatedPackages[packageIndex] = {
+        ...updatedPackages[packageIndex],
+        ...updateData
+      };
+  
+      await gymRepository.update(gymId, {
+        packages: updatedPackages,
+        updatedAt: new Date()
+      });
+  
+      console.log(`✅ Package "${packageId}" updated in gym ${gym.name}`);
+    } catch (error: any) {
+      console.error('❌ Error updating gym package:', error);
+      if (error instanceof UserFriendlyError) throw error;
+      throw new UserFriendlyError(
+        'Failed to update package',
+        error.message || 'Please try again',
+        'UPDATE_PACKAGE_ERROR',
+        true
+      );
+    }
+  }
+  
+  /**
+   * Delete package from gym
+   */
+  async deleteGymPackage(gymId: string, packageId: string): Promise<void> {
+    try {
+      const gym = await gymRepository.getById(gymId);
+      if (!gym) {
+        throw new UserFriendlyError('Gym not found', 'The specified gym does not exist', 'GYM_NOT_FOUND', false);
+      }
+  
+      const updatedPackages = gym.packages.filter(pkg => pkg.id !== packageId);
+      
+      await gymRepository.update(gymId, {
+        packages: updatedPackages,
+        updatedAt: new Date()
+      });
+  
+      console.log(`✅ Package "${packageId}" deleted from gym ${gym.name}`);
+    } catch (error: any) {
+      console.error('❌ Error deleting gym package:', error);
+      if (error instanceof UserFriendlyError) throw error;
+      throw new UserFriendlyError(
+        'Failed to delete package',
+        error.message || 'Please try again',
+        'DELETE_PACKAGE_ERROR',
+        true
+      );
+    }
+  }
+  
+  /**
+ * Update multiple packages at once (for gym editing)
+ */
+async updateGymPackages(gymId: string, packages: Omit<GymPackage, 'id' | 'createdAt'>[] | GymPackage[]): Promise<void> {
+    try {
+      console.log('📦 UPDATE GYM PACKAGES CALLED:');
+      console.log('- Gym ID:', gymId);
+      console.log('- Package count:', packages.length);
+      console.log('- First package:', packages[0]);
+      console.log('- All packages:', packages.map((p, i) => ({
+        index: i,
+        name: 'name' in p ? p.name : 'NO_NAME',
+        price: 'price' in p ? p.price : 'NO_PRICE',
+        hasId: 'id' in p,
+        id: 'id' in p ? (p as any).id : 'NO_ID'
+      })));
+      
+      const gym = await gymRepository.getById(gymId);
+      if (!gym) {
+        throw new UserFriendlyError('Gym not found', 'The specified gym does not exist', 'GYM_NOT_FOUND', false);
+      }
+  
+      console.log('📦 CURRENT GYM PACKAGES:', gym.packages.map(p => ({ name: p.name, price: p.price, id: p.id })));
+  
+      // Process packages - ensure they have IDs and timestamps
+      const processedPackages = packages.map((pkg, index) => {
+        // Check if it's already a GymPackage (has id)
+        if ('id' in pkg && pkg.id) {
+          console.log(`- Keeping existing package: ${pkg.name} (${pkg.id})`);
+          return {
+            ...pkg,
+            createdAt: (pkg as GymPackage).createdAt || new Date()
+          } as GymPackage;
+        }
+        
+        // Otherwise it's Omit<GymPackage, 'id' | 'createdAt'> - create full package
+        const newId = `pkg_${Date.now()}_${index}`;
+        console.log(`- Creating new package: ${pkg.name} (${newId}) with price: ${pkg.price}`);
+        return {
+          ...pkg,
+          id: newId,
+          createdAt: new Date()
+        } as GymPackage;
+      });
+  
+      console.log('📦 FINAL PACKAGES TO SAVE:', processedPackages.map(p => ({ name: p.name, price: p.price, id: p.id })));
+  
+      await gymRepository.update(gymId, {
+        packages: processedPackages,
+        updatedAt: new Date()
+      });
+  
+      console.log(`✅ ${packages.length} packages updated for gym ${gym.name}`);
+      
+      // Verify the update
+      const updatedGym = await gymRepository.getById(gymId);
+      console.log('📦 VERIFICATION - Updated gym packages:', updatedGym?.packages?.map(p => ({ name: p.name, price: p.price })));
+      
+    } catch (error: any) {
+      console.error('❌ Error updating gym packages:', error);
+      console.error('❌ Error details:', {
+        message: error.message,
+        stack: error.stack
+      });
+      if (error instanceof UserFriendlyError) throw error;
+      throw new UserFriendlyError(
+        'Failed to update packages',
+        error.message || 'Please try again',
+        'UPDATE_PACKAGES_ERROR',
+        true
+      );
+    }
+  }
 /**
  * Create member from invitation WITH USER-PROVIDED DATA
  * Called when user accepts a member invitation and provides their information
@@ -1127,6 +1175,210 @@ async createMemberFromInvitation(
         'Failed to create member',
         error.message || 'Please try again',
         'CREATE_MEMBER_ERROR',
+        true
+      );
+    }
+  }
+
+  // Add these methods to the existing GymService class in src/shared/services/GymService.ts
+
+/**
+ * Change a user's team role (owner ↔ staff ↔ trainer)
+ */
+async changeTeamRole(gymId: string, userId: string, newRole: 'owner' | 'staff' | 'trainer'): Promise<void> {
+    try {
+      console.log(`🎯 Changing team role for user ${userId} in gym ${gymId} to ${newRole}`);
+      
+      const [gym, user] = await Promise.all([
+        gymRepository.getById(gymId),
+        userRepository.getById(userId)
+      ]);
+  
+      if (!gym) {
+        throw new Error('Gym not found');
+      }
+  
+      if (!user) {
+        throw new Error('User not found');
+      }
+  
+      // Determine current role from gym arrays
+      let currentRole: 'owner' | 'staff' | 'trainer' | null = null;
+      if (gym.owners.includes(userId)) currentRole = 'owner';
+      else if (gym.staff.includes(userId)) currentRole = 'staff';
+      else if (gym.trainers.includes(userId)) currentRole = 'trainer';
+  
+      if (!currentRole) {
+        throw new Error('User is not in the team');
+      }
+  
+      console.log(`📊 Current role: ${currentRole}, New role: ${newRole}`);
+  
+      // If role is not changing, do nothing
+      if (currentRole === newRole) {
+        console.log(`⚠️ User already has role ${newRole}, no change needed`);
+        return;
+      }
+  
+      // Prepare update data
+      const updateData: Partial<Gym> = { updatedAt: new Date() };
+  
+      // Remove from old array
+      switch (currentRole) {
+        case 'owner':
+          updateData.owners = gym.owners.filter(id => id !== userId);
+          break;
+        case 'staff':
+          updateData.staff = gym.staff.filter(id => id !== userId);
+          break;
+        case 'trainer':
+          updateData.trainers = gym.trainers.filter(id => id !== userId);
+          break;
+      }
+  
+      // Add to new array (if not already there)
+      switch (newRole) {
+        case 'owner':
+          updateData.owners = [...(updateData.owners || gym.owners), userId];
+          break;
+        case 'staff':
+          updateData.staff = [...(updateData.staff || gym.staff), userId];
+          break;
+        case 'trainer':
+          updateData.trainers = [...(updateData.trainers || gym.trainers), userId];
+          break;
+      }
+  
+      // Update gym document
+      await gymRepository.update(gymId, updateData);
+      console.log(`✅ Updated gym arrays`);
+  
+      // Update user's gymMemberships
+      const updatedMemberships = user.gymMemberships?.map(membership => {
+        if (membership.gymId === gymId) {
+          return {
+            ...membership,
+            gymRole: newRole,
+          };
+        }
+        return membership;
+      }) || [];
+  
+      // Determine new global role for user
+      let newGlobalRole = user.role;
+      const hasOtherGymRoles = updatedMemberships.some(m => 
+        m.gymId !== gymId && (m.gymRole === 'owner' || m.gymRole === 'staff' || m.gymRole === 'trainer')
+      );
+  
+      if (!hasOtherGymRoles) {
+        // Update global role based on new gym role
+        switch (newRole) {
+          case 'owner':
+            newGlobalRole = 'gym_owner';
+            break;
+          case 'staff':
+            newGlobalRole = 'gym_staff';
+            break;
+          case 'trainer':
+            newGlobalRole = 'gym_trainer';
+            break;
+        }
+      }
+  
+      await userRepository.update(userId, {
+        gymMemberships: updatedMemberships,
+        role: newGlobalRole,
+        updatedAt: new Date(),
+      });
+  
+      console.log(`✅ Successfully changed ${user.displayName}'s role from ${currentRole} to ${newRole}`);
+    } catch (error: any) {
+      console.error('❌ Error changing team role:', error);
+      throw new UserFriendlyError(
+        'Failed to change role',
+        error.message || 'Please try again',
+        'CHANGE_ROLE_ERROR',
+        true
+      );
+    }
+  }
+  
+  /**
+   * Remove user from team (remove from all role arrays)
+   */
+  async removeFromTeam(gymId: string, userId: string): Promise<void> {
+    try {
+      console.log(`🎯 Removing user ${userId} from team in gym ${gymId}`);
+      
+      const [gym, user] = await Promise.all([
+        gymRepository.getById(gymId),
+        userRepository.getById(userId)
+      ]);
+  
+      if (!gym) {
+        throw new Error('Gym not found');
+      }
+  
+      if (!user) {
+        throw new Error('User not found');
+      }
+  
+      // Check if user is in any role array
+      const isOwner = gym.owners.includes(userId);
+      const isStaff = gym.staff.includes(userId);
+      const isTrainer = gym.trainers.includes(userId);
+  
+      if (!isOwner && !isStaff && !isTrainer) {
+        throw new Error('User is not in the team');
+      }
+  
+      console.log(`📊 User roles: owner=${isOwner}, staff=${isStaff}, trainer=${isTrainer}`);
+  
+      // Prepare update data
+      const updateData: Partial<Gym> = { updatedAt: new Date() };
+  
+      // Remove from all role arrays
+      if (isOwner) {
+        updateData.owners = gym.owners.filter(id => id !== userId);
+      }
+      if (isStaff) {
+        updateData.staff = gym.staff.filter(id => id !== userId);
+      }
+      if (isTrainer) {
+        updateData.trainers = gym.trainers.filter(id => id !== userId);
+      }
+  
+      // Update gym document
+      await gymRepository.update(gymId, updateData);
+      console.log(`✅ Removed from gym arrays`);
+  
+      // Update user's gymMemberships - either remove this gym or set to 'member'
+      const updatedMemberships = user.gymMemberships?.filter(m => m.gymId !== gymId) || [];
+  
+      // Check if user has any other gym roles
+      const hasOtherGymRoles = updatedMemberships.some(m => 
+        m.gymRole === 'owner' || m.gymRole === 'staff' || m.gymRole === 'trainer'
+      );
+  
+      let newGlobalRole = user.role;
+      if (!hasOtherGymRoles && user.role.startsWith('gym_')) {
+        // If no other gym roles, revert to fitness_user
+        newGlobalRole = 'fitness_user';
+      }
+  
+      await userRepository.update(userId, {
+        gymMemberships: updatedMemberships,
+        role: newGlobalRole,
+        updatedAt: new Date(),
+      });
+  
+      console.log(`✅ Successfully removed ${user.displayName} from team`);
+    } catch (error: any) {
+      console.error('❌ Error removing from team:', error);
+      throw new UserFriendlyError(
+        'Failed to remove from team',
+        error.message || 'Please try again',
+        'REMOVE_FROM_TEAM_ERROR',
         true
       );
     }
