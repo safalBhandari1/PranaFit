@@ -880,7 +880,7 @@ const ReportDetailScreen: React.FC = () => {
               progress={workoutData.volumeProgress}
               size={60}
               strokeWidth={3}
-              color={theme.colors.success}
+              color={theme.colors.primary}
               label="Volume"
               value={formatVolumeForCircle(workoutData.totalVolume)} // Formatted with commas
             />

@@ -35,6 +35,7 @@ export interface User {
   // Invitation system support
   pendingInvitations?: string[]; // Array of invitation IDs
   
+  
   // Staff invitation tracking
   invitationStats?: {
     sent: number;

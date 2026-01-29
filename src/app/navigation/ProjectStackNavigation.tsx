@@ -1,21 +1,12 @@
 // import React from 'react';
 // import { createNativeStackNavigator } from '@react-navigation/native-stack';
-// import { TouchableOpacity } from 'react-native';
-// import { useThemeStore } from '../../shared/stores/useThemeStore';
-// import { ThemeText } from '../../shared/ui/ThemeText';
 // import ProjectHomeScreen from '../../features/projects/components/ProjectHomeScreen';
 // import { CreateProjectScreen } from '../../features/projects/components/CreateProjectScreen';
 // import { ProjectDetailScreen } from '../../features/projects/components/ProjectDetailScreen';
-// import { useEnhancedTheme } from '../../shared/hooks/useEnhancedTheme'; // ADD THIS
-
 
 // const Stack = createNativeStackNavigator();
 
 // export default function ProjectStackNavigator() {
-//   //const { theme, toggleTheme, mode } = useThemeStore();
-//   const { theme, toggleTheme, mode } = useEnhancedTheme(); // CHANGE THIS
-
-  
 //   return (
 //     <Stack.Navigator>
 //       {/* Project Home - No header (main tab view) */}
@@ -25,78 +16,31 @@
 //         options={{ headerShown: false }}
 //       />
       
-//       {/* Create Project - Apply options directly to each screen */}
+//       {/* Create Project - No header (using custom header) */}
 //       <Stack.Screen 
 //         name="CreateProject" 
 //         component={CreateProjectScreen}
-//         options={{ 
-//           headerShown: true,
-//           title: 'Create Project Plan',
-//           headerStyle: {
-//             backgroundColor: theme.colors.card,
-//           },
-//           headerTintColor: theme.colors.text.primary,
-//           headerTitleStyle: {
-//             fontWeight: 'bold',
-//           },
-//           headerRight: () => (
-//             <TouchableOpacity 
-//               onPress={toggleTheme}
-//               style={{ 
-//                 marginRight: 16, 
-//                 padding: 8,
-//                 borderRadius: 20,
-//                 backgroundColor: theme.colors.primary,
-//               }}
-//             >
-//               <ThemeText style={{ color: '#FFFFFF', fontSize: 16 }}>
-//                 {mode === 'light' ? '🌙' : '☀️'}
-//               </ThemeText>
-//             </TouchableOpacity>
-//           ),
-//         }}
+//         options={{ headerShown: false }}
 //       />
       
-//       {/* Project Detail - Apply options directly to each screen */}
+//       {/* Project Detail - No header (using custom header) */}
 //       <Stack.Screen 
 //         name="ProjectDetail" 
 //         component={ProjectDetailScreen}
-//         options={{ 
-//           headerShown: true,
-//           title: 'Project Details',
-//           headerStyle: {
-//             backgroundColor: theme.colors.card,
-//           },
-//           headerTintColor: theme.colors.text.primary,
-//           headerTitleStyle: {
-//             fontWeight: 'bold',
-//           },
-//           headerRight: () => (
-//             <TouchableOpacity 
-//               onPress={toggleTheme}
-//               style={{ 
-//                 marginRight: 16, 
-//                 padding: 8,
-//                 borderRadius: 20,
-//                 backgroundColor: theme.colors.primary,
-//               }}
-//             >
-//               <ThemeText style={{ color: '#FFFFFF', fontSize: 16 }}>
-//                 {mode === 'light' ? '🌙' : '☀️'}
-//               </ThemeText>
-//             </TouchableOpacity>
-//           ),
-//         }}
+//         options={{ headerShown: false }}
 //       />
 //     </Stack.Navigator>
 //   );
 // }
+
 
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import ProjectHomeScreen from '../../features/projects/components/ProjectHomeScreen';
 import { CreateProjectScreen } from '../../features/projects/components/CreateProjectScreen';
 import { ProjectDetailScreen } from '../../features/projects/components/ProjectDetailScreen';
+import { DietProjectDetailScreen } from '../../features/projects/components/DietProjectDetailScreen'; // ✅ ADD
+import { DietDayScreen } from '../../features/projects/components/DietDayScreen'; // ✅ ADD
 
 const Stack = createNativeStackNavigator();
 
@@ -121,6 +65,20 @@ export default function ProjectStackNavigator() {
       <Stack.Screen 
         name="ProjectDetail" 
         component={ProjectDetailScreen}
+        options={{ headerShown: false }}
+      />
+      
+      {/* ✅ ADD: Diet Project Detail Screen */}
+      <Stack.Screen 
+        name="DietProjectDetail" 
+        component={DietProjectDetailScreen}
+        options={{ headerShown: false }}
+      />
+      
+      {/* ✅ ADD: Diet Day Screen (for meal selection) */}
+      <Stack.Screen 
+        name="DietDay" 
+        component={DietDayScreen}
         options={{ headerShown: false }}
       />
     </Stack.Navigator>
